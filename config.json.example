@@ -1,0 +1,9 @@
+{
+  "licenseType": "",
+  // make sure you've signed up before running this script with the email given
+  "email": "",
+  // must be formatted the same way as on your license (with dashes)
+  "licenseNumber": "",
+  // YYYY/MM/DD
+  "licenseExpiry": "2022/03/15"
+}

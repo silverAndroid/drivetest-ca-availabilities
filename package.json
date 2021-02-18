@@ -1,0 +1,23 @@
+{
+  "name": "drivetest-ca-availabilities",
+  "version": "1.0.0",
+  "description": "See available dates for driving test on drivetest.ca",
+  "main": "index.js",
+  "repository": "https://github.com/silverAndroid/drivetest-ca-availabilities.git",
+  "author": "Rushil Perera <rushil.perera1081@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "tsc && node drivetest_scraper.js"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.2",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "async-sema": "^3.1.0",
+    "node-fetch": "^2.6.1",
+    "public-ip": "^4.0.3",
+    "puppeteer": "^5.5.0"
+  }
+}
