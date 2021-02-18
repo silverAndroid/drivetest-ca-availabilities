@@ -1,4 +1,4 @@
-import { launch, Page } from 'puppeteer';
+import { Browser, launch, Page } from 'puppeteer';
 import { RateLimit } from 'async-sema';
 
 const config = require('./config.json');
@@ -62,8 +62,9 @@ async function findAvailabilities(searchRadius: number) {
 
 }
 
+let browser: Browser;
 (async () => {
-  const browser = await launch({
+  browser = await launch({
     headless: false
   });
   const page = await browser.newPage();
@@ -71,4 +72,6 @@ async function findAvailabilities(searchRadius: number) {
 
   await login(page);
   await selectLicenseType(page);
-})().catch(err => console.error(err));
+})()
+  .catch(err => console.error(err))
+  .finally(() => browser?.close());
