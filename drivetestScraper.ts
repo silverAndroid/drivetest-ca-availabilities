@@ -189,8 +189,10 @@ async function findAvailableDates(
       }
     }
 
-    await rateLimiter();
-    await page.click(NEXT_BTN_SELECTOR);
+    if (numMonths > 0) {
+      await rateLimiter();
+      await page.click(NEXT_BTN_SELECTOR);
+    }
   } while (numMonths-- > 0);
 
   return availableDates;
@@ -241,9 +243,7 @@ export async function startSearching() {
 
     await login(page);
     await selectLicenseType(page);
-    const dates = await findAvailabilities(
-      page,
-    );
+    const dates = await findAvailabilities(page);
     console.log(dates);
   } catch (err) {
     console.error(err);
