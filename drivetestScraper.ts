@@ -1,5 +1,6 @@
 import { Browser, launch, Page } from "puppeteer";
 import fetch from "node-fetch";
+import { RateLimit } from "async-sema";
 
 import { Coordinates, distanceTo, isInLicenseRange, Unit } from "./utils";
 import {
@@ -130,6 +131,8 @@ async function getDriveTestCenters(
     });
 }
 
+const rateLimiter = RateLimit(15, { uniformDistribution: true });
+
 async function findAvailableDates(
   page: Page,
   location: DriveTestCenterLocation,
@@ -161,6 +164,7 @@ async function findAvailableDates(
 
         while (true) {
           try {
+            await rateLimiter();
             await page.click(DATE_SELECTOR);
             await page.click(CALENDAR_CONTINUE_BTN_SELECTOR);
             break;
@@ -185,6 +189,7 @@ async function findAvailableDates(
       }
     }
 
+    await rateLimiter();
     await page.click(NEXT_BTN_SELECTOR);
   } while (numMonths-- > 0);
 
@@ -204,7 +209,7 @@ async function findAvailabilities(
     selectedLicenseClass
   );
 
-  let dates: Record<string, string[]> = {};
+  let dates: Record<string, { name: string; time: Date }[]> = {};
   for (const driveCenter of availableCenters) {
     const availableDates = await findAvailableDates(
       page,
@@ -213,7 +218,13 @@ async function findAvailabilities(
     );
     for (const availableDate of availableDates) {
       const [date] = availableDate.toISOString().split("T");
-      dates[date] = [...(dates[date] || []), driveCenter.name];
+      dates[date] = [
+        ...(dates[date] || []),
+        {
+          name: driveCenter.name,
+          time: availableDate,
+        },
+      ];
     }
   }
   return dates;
