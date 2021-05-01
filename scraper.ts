@@ -13,6 +13,7 @@ import {
   BookingDateError,
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
+import { logger } from "./logger";
 
 export async function login(
   page: Page,
@@ -41,8 +42,8 @@ export async function login(
     .waitForResponse("https://drivetest.ca/booking/v1/driver/email")
     .then((res) => {
       if (!res.ok()) {
-        console.error(
-          "Failed to automatically log you in, please refresh the page and log in manually"
+        logger.error(
+          "Failed to automatically log you in, please refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
         );
       }
     });
@@ -62,6 +63,7 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
     "https://drivetest.ca/booking/v1/eligibilityCheck"
   );
   if (response.status() === 412) {
+    logger.trace('Going through "editing existing booking" flow');
     const EDIT_BOOKING_SELECTOR = "#booking-licence > div > form > div > a";
     const RESCHEDULE_BOOKING_SELECTOR =
       ".appointment_wrapper > div > div > div.appointment_summary_cols.col-xs-12.col-sm-10 > div > span:nth-child(12) > button";
@@ -173,10 +175,13 @@ async function* findAvailableDates(
   while (true) {
     try {
       await rateLimiter();
+      logger.debug("clicking %s", LOCATION_SELECTOR);
       await page.click(LOCATION_SELECTOR);
+      logger.debug("clicking %s", LOCATION_CONTINUE_BTN_SELECTOR);
       await page.click(LOCATION_CONTINUE_BTN_SELECTOR);
       break;
     } catch (error) {
+      logger.debug("error clicking location, waiting 1 second");
       await page.waitForTimeout(1000);
     }
   }
@@ -227,10 +232,13 @@ async function* findAvailableDates(
         while (true) {
           try {
             await rateLimiter();
+            logger.debug("clicking %s", DATE_SELECTOR);
             await page.click(DATE_SELECTOR);
+            logger.debug("clicking %s", CALENDAR_CONTINUE_BTN_SELECTOR);
             await page.click(CALENDAR_CONTINUE_BTN_SELECTOR);
             break;
           } catch (error) {
+            logger.debug("error clicking date, waiting 1 second");
             await page.waitForTimeout(1000);
           }
         }
@@ -263,8 +271,10 @@ async function* findAvailableDates(
       while (true) {
         try {
           await rateLimiter();
+          logger.debug("clicking %s", NEXT_BTN_SELECTOR);
           await page.click(NEXT_BTN_SELECTOR);
         } catch (error) {
+          logger.debug("error clicking next arrow, waiting 1 second");
           await page.waitForTimeout(1000);
         }
       }

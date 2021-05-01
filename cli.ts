@@ -6,6 +6,7 @@ import puppeteer from "puppeteer";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
 import { promisify } from "util";
 
+import { logger } from "./logger";
 import { findAvailabilities, login, selectLicenseType } from "./scraper";
 import { Coordinates, Result } from "./utils";
 
@@ -199,9 +200,9 @@ async function main() {
     const page = await browser.newPage();
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 
-    console.log("Logging in...");
+    logger.info("Logging in...");
     await login(page, email, licenseNumber, licenseExpiry);
-    console.log(`Finding available times for a ${licenseType} exam`);
+    logger.info("Finding available times for a %s exam", licenseType);
     await selectLicenseType(page, licenseType);
 
     for await (const result of findAvailabilities(
@@ -212,20 +213,23 @@ async function main() {
       months
     )) {
       if (result.type === Result.SEARCHING) {
-        console.log(
-          `Searching ${dayjs()
-            .month(result.month)
-            .format("MMMM")} at location ${result.name}`
+        logger.info(
+          "Searching %s at location %s",
+          dayjs().month(result.month).format("MMMM"),
+          result.name
         );
       } else if (result.type === Result.FAILED) {
-        console.error(
-          `Couldn't search ${result.name} due to error ${result.error.code}: ${result.error.message}`
+        logger.error(
+          "Couldn't search %s due to error %d:%s",
+          result.name,
+          result.error.code,
+          result.error.message
         );
       } else {
-        console.log(
-          `Found new time for location ${result.name}, ${dayjs(
-            result.time
-          ).format("MMMM DD, YYYY [at] hh:mm a")}`
+        logger.info(
+          "Found new time for location %s, %s",
+          result.name,
+          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
         );
       }
     }
@@ -236,7 +240,13 @@ async function main() {
 
 setupCliInterface()
   .then(() => main())
-  .catch((err) => {
-    console.error(err);
+  .catch((err: Error) => {
+    logger.error(err.message);
+    if (err.stack) {
+      logger.error(err.stack);
+    } else {
+      logger.error("Unable to retrieve error stack");
+    }
+
     process.exit(1);
   });
