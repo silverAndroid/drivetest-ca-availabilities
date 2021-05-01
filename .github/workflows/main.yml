@@ -6,7 +6,7 @@ name: Continuous deployment
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
       - id: build-all
         run: yarn build
       - id: package-cli
-        run: yarn package
+        run: yarn package -t linux,macos,win
       - uses: actions/upload-artifact@v2
         with:
           name: drivetest-availabilities-win
