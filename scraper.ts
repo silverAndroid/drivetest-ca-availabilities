@@ -1,0 +1,337 @@
+import { HTTPResponse, Page } from "puppeteer";
+import fetch from "node-fetch";
+import { RateLimit } from "async-sema";
+
+import { Coordinates, distanceTo, isInLicenseRange, Unit } from "./utils";
+import {
+  LicenseClass,
+  DriveTestCenterLocationsResponse,
+  DriveTestCenterLocation,
+  BookingDateResponse,
+  Description,
+  BookingTimeResponse,
+  BookingDateError,
+} from "./api/interfaces";
+import { Result } from "./utils/enums";
+
+export async function login(
+  page: Page,
+  email: string,
+  licenseNumber: string,
+  licenseExpiry: string
+) {
+  const EMAIL_SELECTOR = "#emailAddress";
+  const CONFIRM_EMAIL_SELECTOR = "#confirmEmailAddress";
+  const LICENSE_NUMBER_SELECTOR = "#licenceNumber";
+  const LICENSE_EXPIRY_SELECTOR = "#licenceExpiryDate";
+  const SUBMIT_BTN_SELECTOR = "#regSubmitBtn";
+
+  await page.waitForSelector(EMAIL_SELECTOR);
+  await page.click(EMAIL_SELECTOR);
+  await page.keyboard.type(email);
+  await page.click(CONFIRM_EMAIL_SELECTOR);
+  await page.keyboard.type(email);
+  await page.click(LICENSE_NUMBER_SELECTOR);
+  await page.keyboard.type(licenseNumber);
+  await page.click(LICENSE_EXPIRY_SELECTOR);
+  await page.keyboard.type(licenseExpiry);
+
+  await page.click(SUBMIT_BTN_SELECTOR);
+  page
+    .waitForResponse("https://drivetest.ca/booking/v1/driver/email")
+    .then((res) => {
+      if (!res.ok()) {
+        console.error(
+          "Failed to automatically log you in, please refresh the page and log in manually"
+        );
+      }
+    });
+  await page.waitForNavigation();
+}
+
+export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
+  const LICENSE_BTN_SELECTOR = "#lic_" + licenseType;
+  const CONTINUE_BTN_SELECTOR =
+    "#booking-licence > div > form > div > div.directive_wrapper.ng-isolate-scope > button";
+
+  await page.waitForSelector(LICENSE_BTN_SELECTOR);
+  await page.click(LICENSE_BTN_SELECTOR);
+  await page.click(CONTINUE_BTN_SELECTOR);
+
+  const response = await page.waitForResponse(
+    "https://drivetest.ca/booking/v1/eligibilityCheck"
+  );
+  if (response.status() === 412) {
+    const EDIT_BOOKING_SELECTOR = "#booking-licence > div > form > div > a";
+    const RESCHEDULE_BOOKING_SELECTOR =
+      ".appointment_wrapper > div > div > div.appointment_summary_cols.col-xs-12.col-sm-10 > div > span:nth-child(12) > button";
+    const MODAL_RESCHEDULE_BOOKING_SELECTOR =
+      ".form-group > button.btn.btn-primary";
+
+    await page.waitForSelector(EDIT_BOOKING_SELECTOR, { visible: true });
+    await page.click(EDIT_BOOKING_SELECTOR);
+    await page.waitForSelector(RESCHEDULE_BOOKING_SELECTOR);
+    await page.click(RESCHEDULE_BOOKING_SELECTOR);
+
+    const { waitForRescheduleModal } = await import("./evaluate");
+    await page.waitForSelector(MODAL_RESCHEDULE_BOOKING_SELECTOR);
+    await page.evaluate(
+      waitForRescheduleModal,
+      MODAL_RESCHEDULE_BOOKING_SELECTOR
+    );
+    await page.click(MODAL_RESCHEDULE_BOOKING_SELECTOR);
+  }
+}
+
+async function getDriveTestCenters(
+  searchRadius: number,
+  currentLocation: Coordinates,
+  selectedLicenseClass: LicenseClass
+) {
+  const response = await fetch("https://drivetest.ca/booking/v1/location", {
+    method: "GET",
+  });
+  const {
+    driveTestCentres,
+  } = (await response.json()) as DriveTestCenterLocationsResponse;
+  return driveTestCentres
+    .map<DriveTestCenterLocation>(
+      ({
+        latitude,
+        longitude,
+        locationHours,
+        isClosed,
+        name,
+        id,
+        licenceTestTypes: licenseTestTypes,
+      }) => ({
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        locationHours,
+        isClosed,
+        name,
+        id,
+        licenseTestTypes,
+      })
+    )
+    .filter(({ latitude, longitude, licenseTestTypes }) => {
+      if (
+        !licenseTestTypes.some((licenseType) =>
+          isInLicenseRange(licenseType, selectedLicenseClass)
+        )
+      ) {
+        return false;
+      }
+
+      // if centre outside of search radius, remove from array
+      if (
+        distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers) >
+        searchRadius
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+}
+
+const rateLimiter = RateLimit(15, { uniformDistribution: true });
+
+async function* findAvailableDates(
+  page: Page,
+  location: DriveTestCenterLocation,
+  numMonths: number
+): AsyncGenerator<
+  | {
+      type: Result.SEARCHING;
+      month: number;
+      name: string;
+      times?: undefined;
+    }
+  | {
+      type: Result.FOUND;
+      times: Date[];
+      month?: undefined;
+    }
+  | {
+      type: Result.FAILED;
+      name: string;
+      error: {
+        code: number;
+        message: string;
+      };
+    },
+  Date[]
+> {
+  const LOCATION_SELECTOR = `a[id="${location.id}"]`;
+  const LOCATION_CONTINUE_BTN_SELECTOR =
+    "#booking-location > div > div > form > div.form-group.loc-submit > div.directive_wrapper.ng-isolate-scope > button";
+  const NEXT_BTN_SELECTOR =
+    "#driver-info > div.ng-scope > div.calendar.ng-scope > div.calendar-header > a.calendar-month-control.ion-chevron-right";
+
+  await page.waitForSelector(LOCATION_SELECTOR);
+  while (true) {
+    try {
+      await rateLimiter();
+      await page.click(LOCATION_SELECTOR);
+      await page.click(LOCATION_CONTINUE_BTN_SELECTOR);
+      break;
+    } catch (error) {
+      await page.waitForTimeout(1000);
+    }
+  }
+
+  let availableDates: Date[] = [];
+  do {
+    let month = 0;
+    const bookingDateResponse = await page.waitForResponse(
+      (res: HTTPResponse) => {
+        const url = res.url();
+        const isValidUrl = url.startsWith(
+          `https://drivetest.ca/booking/v1/booking`
+        );
+
+        if (isValidUrl) {
+          month = Number(new URLSearchParams(url).get("month")) - 1;
+        }
+
+        return isValidUrl;
+      }
+    );
+    const bookingDateJson = (await bookingDateResponse.json()) as BookingDateResponse;
+    const { availableBookingDates, statusCode } = bookingDateJson;
+
+    if (statusCode > 0) {
+      const {
+        statusMessage,
+      } = (bookingDateJson as unknown) as BookingDateError;
+      yield {
+        type: Result.FAILED,
+        name: location.name,
+        error: {
+          code: statusCode,
+          message: statusMessage,
+        },
+      };
+      return [];
+    }
+
+    yield { type: Result.SEARCHING, name: location.name, month };
+
+    for (const { description, day } of availableBookingDates) {
+      if (description === Description.Open) {
+        const DATE_SELECTOR = `a[title="${day}"]`;
+        const CALENDAR_CONTINUE_BTN_SELECTOR = "#calendarSubmit > button";
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          try {
+            await rateLimiter();
+            await page.click(DATE_SELECTOR);
+            await page.click(CALENDAR_CONTINUE_BTN_SELECTOR);
+            break;
+          } catch (error) {
+            await page.waitForTimeout(1000);
+          }
+        }
+
+        const bookingTimesResponse = await page.waitForResponse(
+          (res: HTTPResponse) =>
+            res.url().startsWith("https://drivetest.ca/booking/v1/booking")
+        );
+        const {
+          availableBookingTimes = [],
+        } = (await bookingTimesResponse.json()) as BookingTimeResponse;
+        availableDates = [
+          ...availableDates,
+          ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
+        ];
+
+        yield {
+          type: Result.FOUND,
+          times: availableBookingTimes.map(
+            ({ timeslot }) => new Date(timeslot)
+          ),
+        };
+
+        // need to wait 2 seconds for scrolling to finish
+        await page.waitForTimeout(2000);
+      }
+    }
+
+    if (numMonths > 0) {
+      while (true) {
+        try {
+          await rateLimiter();
+          await page.click(NEXT_BTN_SELECTOR);
+        } catch (error) {
+          await page.waitForTimeout(1000);
+        }
+      }
+    }
+  } while (numMonths-- > 0);
+
+  return availableDates;
+}
+
+export async function* findAvailabilities(
+  page: Page,
+  searchRadius: number,
+  currentLocation: Coordinates,
+  selectedLicenseClass: LicenseClass,
+  numMonths = 6
+): AsyncGenerator<
+  | {
+      type: Result.SEARCHING;
+      month: number;
+      name: string;
+    }
+  | {
+      type: Result.FOUND;
+      name: string;
+      time: Date;
+    }
+  | {
+      type: Result.FAILED;
+      name: string;
+      error: {
+        code: number;
+        message: string;
+      };
+    },
+  Record<string, { name: string; time: Date }[]>
+> {
+  const availableCenters = await getDriveTestCenters(
+    searchRadius,
+    currentLocation,
+    selectedLicenseClass
+  );
+
+  const dates: Record<string, { name: string; time: Date }[]> = {};
+  for (const driveCenter of availableCenters) {
+    const availableDates = findAvailableDates(page, driveCenter, numMonths);
+    for await (const result of availableDates) {
+      if (result.type === Result.FOUND) {
+        for (const availableDate of result.times) {
+          const [date] = availableDate.toISOString().split("T");
+          yield {
+            type: Result.FOUND,
+            name: driveCenter.name,
+            time: availableDate,
+          };
+          dates[date] = [
+            ...(dates[date] || []),
+            {
+              name: driveCenter.name,
+              time: availableDate,
+            },
+          ];
+        }
+      } else {
+        yield result;
+      }
+    }
+  }
+
+  return dates;
+}

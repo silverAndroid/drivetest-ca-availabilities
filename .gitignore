@@ -1,1 +1,7 @@
 .vscode
+
+config.json
+node_modules
+*.js
+.local-chromium/
+drivetest-availabilities-*
