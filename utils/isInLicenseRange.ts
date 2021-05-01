@@ -1,5 +1,5 @@
 function generateCharArray(char1: string, char2: string) {
-  let i = char1.charCodeAt(0);
+  const i = char1.charCodeAt(0);
   const j = char2.charCodeAt(0);
   return new Array(j - i + 1)
     .fill(i)

@@ -4,13 +4,19 @@ export interface BookingDateResponse {
   statusCode: number;
 }
 
+export interface BookingDateError {
+  valid: boolean;
+  statusCode: number;
+  statusMessage: string;
+}
+
 export interface AvailableBookingDate {
   day: number;
   density: number;
   description: Description;
 }
 
-export enum Description {
+export const enum Description {
   Full = "FULL",
   Open = "OPEN",
   Unavailable = "UNAVAILABLE",
