@@ -1,0 +1,7 @@
+{
+  "pkg": {
+    "assets": [
+      "dist/apps/cli/*.main.js"
+    ]
+  }
+}
