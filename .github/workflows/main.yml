@@ -33,7 +33,7 @@ jobs:
       - id: build-all
         run: yarn build
       - id: package-cli
-        run: yarn package
+        run: yarn package -t linux,macos,win
       - uses: actions/upload-artifact@v2
         with:
           name: drivetest-availabilities-win
