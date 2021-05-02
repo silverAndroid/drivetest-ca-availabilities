@@ -1,9 +1,11 @@
 import { Command, InvalidOptionArgumentError } from "commander";
 import dayjs from "dayjs";
 import { readFile } from "fs";
+import fetch from 'node-fetch';
 import * as path from "path";
 import puppeteer from "puppeteer";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
+import semver from 'semver';
 import { promisify } from "util";
 
 import { logger } from "./logger";
@@ -175,7 +177,30 @@ async function downloadChrome() {
   return revisionInfo.executablePath;
 }
 
+async function checkCliUpdate() {
+  const res = await fetch(
+    "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest"
+  );
+  const { version: currentVersion } = require('./package.json');
+  const newVersion = res.url.split('/').slice(-1)[0];
+
+  if (semver.lt(currentVersion, newVersion)) {
+    return res.url;
+  }
+
+  return null;
+}
+
 async function main() {
+  logger.info('Checking for updates...');
+  const updateUrl = await checkCliUpdate();
+  if (updateUrl) {
+    logger.info('Found new update at %s! Please update to the latest version.', updateUrl);
+    return;
+  } else {
+    logger.info('No new updates found, current version %s', require('./package.json').version);
+  }
+
   let executablePath: string | undefined = undefined;
   if (!configPromise) {
     executablePath = await downloadChrome();
