@@ -1,13 +1,48 @@
-# drivetest-ca-availabilities
-This is my attempt on trying to see which dates are available for driving test centers around Ontario. My inspiration was that I needed to book my G test in August, but since it was a busy time it was hard to find a testing center in or near the GTA. Since there wasn't an option to filter for places based on availability between dates, I had decided to reverse-engineer the API and try to find that information myself. 
+# drivetest.ca availabilities
 
-Since the website was made in AngularJS, there were REST calls with JSON responses made which was easy to spot with the Chrome developer tools. I had found the endpoint that contained all the test centers, and the endpoint to check the availability of each test center for a specific month. Using the endpoint that returned all the test centers, I saved the ones that did G tests by saving their service ID and the city name into an array of tuplets. Then, I used the endpoint to check the availability of each test center for a specific month for each driving center that I found.
+This CLI tool written in Node.js will log in to [Ontario's driving test booking system](https://drivetest.ca), search for all the available dates and times for all locations within a  given search radius (default is 20km). Once it finds some available times, it will write them to the terminal.
 
-However, there was an authentication guard on that endpoint so I had to reverse-engineer the login endpoint. I found that the login endpoint required an email, a confirmation of it (for some reason...), my driver licence number, the expiry date and a ReCaptcha code. The first 4 were pretty easy to enter but the ReCaptcha code was going to be a bit tricky. I didn't want to overcomplicate the script by adding something like Selenium and OpenCV just so I could bypass ReCaptcha. I noticed that when ReCaptcha had confirmed I was not a robot, it sent a callback to the website with a code which looked exactly like the one being passed inside the endpoint, so I decided to just do this part manually. I decided to test this with Postman but when I sent the request, I got a response with a 500 status code. I figured maybe I had forgotten to add something like an Authorization header but the only thing I could find were 3 cookies that may have been connected to how the website does authorization. I tried a bunch of requests with a combination of each cookie but I kept receiving status code 500 for each request, which is where I gave up. Since I wasn't sure how the website generated the session ID or the `dmid` cookie, I had to give up.
+I worked on this tool during some of my spare time because I found it difficult to find open spots for driving tests due to the way the website was designed. It uses [Puppeteer](https://github.com/puppeteer/puppeteer) to walk through the website and extract information as if it was a regular user (with some rate-limiting as to not overload the website with requests).
 
-# Getting the ReCaptcha code
-1. Go to https://drivetest.ca/book-a-road-test/booking.html#/validate-driver-email
-1. When the page loads, open the Developer Tools in your browser and click on the Network tab.
-1. Click on the checkbox next to "I'm not a robot" and follow the verification steps until there's a green checkmark next to it.
-1. When you become verified, a URL in the Network tab of the Developer Tools will appear that will start with https://www.google.com/recaptcha/api2/userverify?k=... although browsers like Chrome will show it as userverify?k=...
-1. Click on this URL and inside Preview, look for a very long string. That long string is your ReCaptcha code, enter that into the script.
+## Using the prebuilt binary
+
+You can find a prebuilt binary in the Releases section with a list of the options below that you will need to pass (the ones that have a default are optional).
+
+On the first run, the script will download a compatible version of Chrome/Chromium to retrieve the information but after that, it'll reuse the downloaded instance (unless I decide to use an updated revision in a future update).
+
+```
+$ .\drivetest-availabilities-win.exe -h
+$ ./drivetest-availabilities-linux -h
+$ ./drivetest-availabilities-macos -h
+
+Usage: cli [options]
+
+Options:
+  -r, --radius <radius>            search radius in kilometers from where you are (default: 20)
+  -l, --location <location>        your current location expressed in "latitude,longitude" (eg.
+                                   43.6426445,-79.3871645).
+  -m, --months <months>            Number of months to look ahead (default: 6)
+  --licenseType <licenseType>      License type exam to search for
+  --email <email>                  Email to log in with
+  --licenseNumber <licenseNumber>  License number to log in with
+  --licenseExpiry <licenseExpiry>  License expiry date expressed in "YYYY/MM/DD" to log in with
+  -h, --help                       display help for command
+```
+
+## Building from source
+
+### Prerequisites
+
+* Node.js 14+ (active LTS at time of writing)
+* [yarn classic](https://classic.yarnpkg.com/en/docs/install) (npm can be used but yarn is recommended since there's a yarn.lock file included)
+
+### Steps
+
+1. Install necessary dependencies by running `yarn install`
+2. Compile the Typescript files to Javascript by running `yarn build`
+3. Rename config.json.example to config.json, fill in all the empty fields and remove the comments from the file. However, if you want to pass the details manually as CLI arguments, you can leave the fields empty.
+4. Start the script by running `yarn start` and passing in the required arguments (and any optional ones, if you wish)
+
+### Creating your own executables
+
+After following the steps above, if you wish to create your own executable off of this, just run `yarn package`.
