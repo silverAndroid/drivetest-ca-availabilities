@@ -223,6 +223,7 @@ async function main() {
       executablePath,
     });
     const page = await browser.newPage();
+    page.setDefaultTimeout(0);
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 
     logger.info("Logging in...");
