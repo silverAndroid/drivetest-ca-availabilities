@@ -1,4 +1,4 @@
-import { HTTPResponse, Page } from "puppeteer";
+import { Page } from "puppeteer";
 import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
@@ -20,6 +20,12 @@ import {
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
 import { logger } from "./logger";
+import {
+  BOOKING_DATES_ID,
+  BOOKING_TIMES_ID,
+  ELIGIBILITY_CHECK_ID,
+  waitForResponse,
+} from "./responseListener";
 
 export async function login(
   page: Page,
@@ -77,9 +83,7 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
   await page.click(LICENSE_BTN_SELECTOR);
   await page.click(CONTINUE_BTN_SELECTOR);
 
-  const response = await page.waitForResponse(
-    "https://drivetest.ca/booking/v1/eligibilityCheck"
-  );
+  const response = await waitForResponse(page, ELIGIBILITY_CHECK_ID);
   if (response.status() === 412) {
     logger.trace('Going through "editing existing booking" flow');
     const EDIT_BOOKING_SELECTOR = "#booking-licence > div > form > div > a";
@@ -113,7 +117,7 @@ async function getDriveTestCenters(
   });
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
-  logger.debug('Fetched drivetest locations');
+  logger.debug("Fetched drivetest locations");
   return driveTestCentres
     .map<DriveTestCenterLocation>(
       ({
@@ -208,27 +212,20 @@ async function* findAvailableDates(
   let availableDates: Date[] = [];
   do {
     let month = 0;
-    const bookingDateResponse = await page.waitForResponse(
-      (res: HTTPResponse) => {
-        const url = res.url();
-        const isValidUrl = url.startsWith(
-          `https://drivetest.ca/booking/v1/booking`
-        );
-
-        if (isValidUrl) {
-          month = Number(new URLSearchParams(url).get("month")) - 1;
-        }
-
-        return isValidUrl;
-      }
-    );
-    const bookingDateJson = (await bookingDateResponse.json()) as BookingDateResponse;
+    logger.debug("waiting for response with dates for location");
+    const bookingDateResponse = await waitForResponse(page, BOOKING_DATES_ID);
+    month =
+      Number(
+        new URLSearchParams(bookingDateResponse.url().split("?").pop()).get(
+          "month"
+        )
+      ) - 1;
+    const bookingDateJson =
+      (await bookingDateResponse.json()) as BookingDateResponse;
     const { availableBookingDates, statusCode } = bookingDateJson;
 
     if (statusCode > 0) {
-      const {
-        statusMessage,
-      } = (bookingDateJson as unknown) as BookingDateError;
+      const { statusMessage } = bookingDateJson as unknown as BookingDateError;
       yield {
         type: Result.FAILED,
         name: location.name,
@@ -259,13 +256,12 @@ async function* findAvailableDates(
           { maxRetries: 100 }
         );
 
-        const bookingTimesResponse = await page.waitForResponse(
-          (res: HTTPResponse) =>
-            res.url().startsWith("https://drivetest.ca/booking/v1/booking")
+        const bookingTimesResponse = await waitForResponse(
+          page,
+          BOOKING_TIMES_ID
         );
-        const {
-          availableBookingTimes = [],
-        } = (await bookingTimesResponse.json()) as BookingTimeResponse;
+        const { availableBookingTimes = [] } =
+          (await bookingTimesResponse.json()) as BookingTimeResponse;
         availableDates = [
           ...availableDates,
           ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),

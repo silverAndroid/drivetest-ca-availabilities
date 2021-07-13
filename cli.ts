@@ -1,14 +1,20 @@
 import { Command, InvalidOptionArgumentError } from "commander";
 import dayjs from "dayjs";
 import { readFile } from "fs";
-import fetch from 'node-fetch';
+import fetch from "node-fetch";
 import * as path from "path";
 import puppeteer from "puppeteer";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
-import semver from 'semver';
+import semver from "semver";
 import { promisify } from "util";
 
 import { logger } from "./logger";
+import {
+  BOOKING_DATES_ID,
+  BOOKING_TIMES_ID,
+  ELIGIBILITY_CHECK_ID,
+  listenForResponses,
+} from "./responseListener";
 import { findAvailabilities, login, selectLicenseType } from "./scraper";
 import { Coordinates, Result } from "./utils";
 
@@ -181,8 +187,8 @@ async function checkCliUpdate() {
   const res = await fetch(
     "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest"
   );
-  const { version: currentVersion } = require('./package.json');
-  const newVersion = res.url.split('/').slice(-1)[0];
+  const { version: currentVersion } = require("./package.json");
+  const newVersion = res.url.split("/").slice(-1)[0];
 
   if (semver.lt(currentVersion, newVersion)) {
     return res.url;
@@ -192,13 +198,19 @@ async function checkCliUpdate() {
 }
 
 async function main() {
-  logger.info('Checking for updates...');
+  logger.info("Checking for updates...");
   const updateUrl = await checkCliUpdate();
   if (updateUrl) {
-    logger.info('Found new update at %s! Please update to the latest version.', updateUrl);
+    logger.info(
+      "Found new update at %s! Please update to the latest version.",
+      updateUrl
+    );
     return;
   } else {
-    logger.info('No new updates found, current version %s', require('./package.json').version);
+    logger.info(
+      "No new updates found, current version %s",
+      require("./package.json").version
+    );
   }
 
   let executablePath: string | undefined = undefined;
@@ -221,9 +233,25 @@ async function main() {
     browser = await puppeteer.launch({
       headless: false,
       executablePath,
+      defaultViewport: null as unknown as undefined,
     });
     const page = await browser.newPage();
     page.setDefaultTimeout(0);
+    page.setDefaultNavigationTimeout(0);
+
+    listenForResponses(page, (req) => {
+      const url = req.url();
+      if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
+        return ELIGIBILITY_CHECK_ID;
+      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking/")) {
+        return BOOKING_DATES_ID;
+      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
+        return BOOKING_TIMES_ID;
+      }
+
+      return null;
+    });
+
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 
     logger.info("Logging in...");
@@ -267,11 +295,10 @@ async function main() {
 setupCliInterface()
   .then(() => main())
   .catch((err: Error) => {
-    logger.error(err.message);
     if (err.stack) {
       logger.error(err.stack);
     } else {
-      logger.error("Unable to retrieve error stack");
+      logger.error(err.message);
     }
 
     process.exit(1);
