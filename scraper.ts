@@ -51,7 +51,7 @@ export async function login(
       );
       if (!res.ok()) {
         logger.error(
-          "Failed to automatically log you in, please refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
+          "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
         );
         throw new Error("Failed to log in automatically");
       }
