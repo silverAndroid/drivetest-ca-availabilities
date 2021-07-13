@@ -2,7 +2,13 @@ import { HTTPResponse, Page } from "puppeteer";
 import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
-import { Coordinates, distanceTo, isInLicenseRange, Unit } from "./utils";
+import {
+  Coordinates,
+  distanceTo,
+  isInLicenseRange,
+  retryIfFail,
+  Unit,
+} from "./utils";
 import {
   LicenseClass,
   DriveTestCenterLocationsResponse,
@@ -38,16 +44,28 @@ export async function login(
   await page.keyboard.type(licenseExpiry);
 
   await page.click(SUBMIT_BTN_SELECTOR);
-  page
-    .waitForResponse("https://drivetest.ca/booking/v1/driver/email")
-    .then((res) => {
+  await retryIfFail(
+    async function waitForLogin(page: Page) {
+      const res = await page.waitForResponse(
+        "https://drivetest.ca/booking/v1/driver/email"
+      );
       if (!res.ok()) {
         logger.error(
           "Failed to automatically log you in, please refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
         );
+        throw new Error("Failed to log in automatically");
       }
-    });
-  await page.waitForNavigation();
+    },
+    [page],
+    { useAllArgs: true }
+  );
+  await retryIfFail(
+    async function waitForNavigation(page: Page) {
+      await page.waitForNavigation();
+    },
+    [page],
+    { useAllArgs: true }
+  );
 }
 
 export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
@@ -93,9 +111,9 @@ async function getDriveTestCenters(
   const response = await fetch("https://drivetest.ca/booking/v1/location", {
     method: "GET",
   });
-  const {
-    driveTestCentres,
-  } = (await response.json()) as DriveTestCenterLocationsResponse;
+  const { driveTestCentres } =
+    (await response.json()) as DriveTestCenterLocationsResponse;
+  logger.debug('Fetched drivetest locations');
   return driveTestCentres
     .map<DriveTestCenterLocation>(
       ({
@@ -172,19 +190,20 @@ async function* findAvailableDates(
     "#driver-info > div.ng-scope > div.calendar.ng-scope > div.calendar-header > a.calendar-month-control.ion-chevron-right";
 
   await page.waitForSelector(LOCATION_SELECTOR);
-  while (true) {
-    try {
+  await retryIfFail(
+    async function selectLocation(
+      locationSelector: string,
+      locationContinueBtnSelector: string
+    ) {
       await rateLimiter();
-      logger.debug("clicking %s", LOCATION_SELECTOR);
-      await page.click(LOCATION_SELECTOR);
-      logger.debug("clicking %s", LOCATION_CONTINUE_BTN_SELECTOR);
-      await page.click(LOCATION_CONTINUE_BTN_SELECTOR);
-      break;
-    } catch (error) {
-      logger.debug("error clicking location, waiting 1 second");
-      await page.waitForTimeout(1000);
-    }
-  }
+      logger.debug("clicking %s", locationSelector);
+      await page.click(locationSelector);
+      logger.debug("clicking %s", locationContinueBtnSelector);
+      await page.click(locationContinueBtnSelector);
+    },
+    [page, LOCATION_SELECTOR, LOCATION_CONTINUE_BTN_SELECTOR],
+    { maxRetries: 100 }
+  );
 
   let availableDates: Date[] = [];
   do {
@@ -228,20 +247,17 @@ async function* findAvailableDates(
         const DATE_SELECTOR = `a[title="${day}"]`;
         const CALENDAR_CONTINUE_BTN_SELECTOR = "#calendarSubmit > button";
 
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          try {
+        retryIfFail(
+          async function selectDate(dateSelector, calendarContinueBtnSelector) {
             await rateLimiter();
-            logger.debug("clicking %s", DATE_SELECTOR);
-            await page.click(DATE_SELECTOR);
-            logger.debug("clicking %s", CALENDAR_CONTINUE_BTN_SELECTOR);
-            await page.click(CALENDAR_CONTINUE_BTN_SELECTOR);
-            break;
-          } catch (error) {
-            logger.debug("error clicking date, waiting 1 second");
-            await page.waitForTimeout(1000);
-          }
-        }
+            logger.debug("clicking %s", dateSelector);
+            await page.click(dateSelector);
+            logger.debug("clicking %s", calendarContinueBtnSelector);
+            await page.click(calendarContinueBtnSelector);
+          },
+          [page, DATE_SELECTOR, CALENDAR_CONTINUE_BTN_SELECTOR],
+          { maxRetries: 100 }
+        );
 
         const bookingTimesResponse = await page.waitForResponse(
           (res: HTTPResponse) =>
@@ -268,16 +284,15 @@ async function* findAvailableDates(
     }
 
     if (numMonths > 0) {
-      while (true) {
-        try {
+      retryIfFail(
+        async function clickNext(nextBtnSelector: string) {
           await rateLimiter();
-          logger.debug("clicking %s", NEXT_BTN_SELECTOR);
-          await page.click(NEXT_BTN_SELECTOR);
-        } catch (error) {
-          logger.debug("error clicking next arrow, waiting 1 second");
-          await page.waitForTimeout(1000);
-        }
-      }
+          logger.debug("clicking %s", nextBtnSelector);
+          await page.click(nextBtnSelector);
+        },
+        [page, NEXT_BTN_SELECTOR],
+        { maxRetries: 100 }
+      );
     }
   } while (numMonths-- > 0);
 
