@@ -72,6 +72,7 @@ if (!(process as ProcessWithPkg).pkg) {
           "config.json not found in same directory as this program!"
         );
       }
+      throw err;
     });
 }
 
