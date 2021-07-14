@@ -1,6 +1,6 @@
 {
   "name": "drivetest-ca-availabilities",
-  "version": "1.1.0",
+  "version": "1.2.2",
   "description": "See available dates for driving test on drivetest.ca",
   "main": "index.js",
   "repository": "https://github.com/silverAndroid/drivetest-ca-availabilities.git",
