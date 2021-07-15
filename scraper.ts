@@ -138,12 +138,13 @@ async function getDriveTestCenters(
         licenseTestTypes,
       })
     )
-    .filter(({ latitude, longitude, licenseTestTypes }) => {
+    .filter(({ name, latitude, longitude, licenseTestTypes }) => {
       if (
         !licenseTestTypes.some((licenseType) =>
           isInLicenseRange(licenseType, selectedLicenseClass)
         )
       ) {
+        logger.trace('%s does not have license type %s', name, selectedLicenseClass)
         return false;
       }
 
@@ -152,6 +153,12 @@ async function getDriveTestCenters(
         distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers) >
         searchRadius
       ) {
+        logger.trace(
+          "%s too far away; search radius: %d, distance: %d",
+          name,
+          searchRadius,
+          distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers)
+        );
         return false;
       }
 
