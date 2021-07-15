@@ -334,6 +334,9 @@ export async function* findAvailabilities(
     currentLocation,
     selectedLicenseClass
   );
+  if (availableCenters.length === 0) {
+    logger.error('No Drivetest centers that match your preferences');
+  }
 
   const dates: Record<string, { name: string; time: Date }[]> = {};
   for (const driveCenter of availableCenters) {
