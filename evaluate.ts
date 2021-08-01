@@ -12,6 +12,6 @@ export function waitForRescheduleModal(modalRescheduleBookingSelector: string) {
   });
 }
 
-export function getInnerText(node: HTMLElement) {
-  return node.innerText;
+export function getInnerText(node: Element) {
+  return (node as HTMLElement).innerText;
 }

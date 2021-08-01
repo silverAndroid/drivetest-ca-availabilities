@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import fetch from "node-fetch";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
 
 import { LicenseClass } from "./api/interfaces";
@@ -64,8 +66,9 @@ export async function main(options: CliOptions, chromePath?: string) {
     months,
   } = options;
 
-  let browser: puppeteer.Browser | undefined;
+  let browser: puppeteerType.Browser | undefined;
   try {
+    puppeteer.use(StealthPlugin());
     browser = await puppeteer.launch({
       headless: false,
       executablePath: chromePath,

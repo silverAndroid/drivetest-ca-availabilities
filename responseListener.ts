@@ -1,4 +1,8 @@
-import { HTTPRequest, HTTPResponse, Page } from "puppeteer";
+import {
+  Request as HTTPRequest,
+  Response as HTTPResponse,
+  Page,
+} from "puppeteer";
 import { logger } from "./logger";
 
 export const BOOKING_DATES_ID = "booking_dates";
