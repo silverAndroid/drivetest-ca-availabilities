@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node cli.js",
     "build": "tsc",
-    "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cli.js",
+    "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
     "package:dev": "yarn build && yarn package"
   },
   "devDependencies": {
