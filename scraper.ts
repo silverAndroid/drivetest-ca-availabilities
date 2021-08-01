@@ -24,6 +24,7 @@ import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
+  LOCATIONS_ID,
   waitForResponse,
 } from "./responseListener";
 
@@ -37,8 +38,8 @@ export async function waitToEnterBookingPage(page: Page) {
       const { getInnerText } = await import("./evaluate");
       const headerElem = await page.$("#headerBar");
       const headerText = await headerElem?.evaluate(getInnerText);
-      if (headerText === 'CAPTCHA check') {
-        throw new Error('Failed to pass HCaptcha');
+      if (headerText === "CAPTCHA check") {
+        throw new Error("Failed to pass HCaptcha");
       }
     },
     [page],
@@ -130,13 +131,12 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
 }
 
 async function getDriveTestCenters(
+  page: Page,
   searchRadius: number,
   currentLocation: Coordinates,
   selectedLicenseClass: LicenseClass
 ) {
-  const response = await fetch("https://drivetest.ca/booking/v1/location", {
-    method: "GET",
-  });
+  const response = await waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
   logger.debug("Fetched drivetest locations");
@@ -149,7 +149,7 @@ async function getDriveTestCenters(
         isClosed,
         name,
         id,
-        licenceTestTypes: licenseTestTypes,
+        licenceTestTypes,
       }) => ({
         latitude: Number(latitude),
         longitude: Number(longitude),
@@ -157,12 +157,13 @@ async function getDriveTestCenters(
         isClosed,
         name,
         id,
-        licenseTestTypes,
+        licenceTestTypes,
       })
     )
-    .filter(({ name, latitude, longitude, licenseTestTypes }) => {
+    .filter(({ name, latitude, longitude, licenceTestTypes }) => {
       if (
-        !licenseTestTypes.some((licenseType) =>
+        licenceTestTypes &&
+        !licenceTestTypes.some((licenseType) =>
           isInLicenseRange(licenseType, selectedLicenseClass)
         )
       ) {
@@ -356,6 +357,7 @@ export async function* findAvailabilities(
   Record<string, { name: string; time: Date }[]>
 > {
   const availableCenters = await getDriveTestCenters(
+    page,
     searchRadius,
     currentLocation,
     selectedLicenseClass

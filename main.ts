@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
 
@@ -12,8 +12,14 @@ import {
   ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
+  LOCATIONS_ID,
 } from "./responseListener";
-import { login, selectLicenseType, findAvailabilities, waitToEnterBookingPage } from "./scraper";
+import {
+  login,
+  selectLicenseType,
+  findAvailabilities,
+  waitToEnterBookingPage,
+} from "./scraper";
 import { Coordinates, Result } from "./utils";
 
 export interface CliOptions {
@@ -86,6 +92,8 @@ export async function main(options: CliOptions, chromePath?: string) {
         return BOOKING_DATES_ID;
       } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
         return BOOKING_TIMES_ID;
+      } else if (url === "https://drivetest.ca/booking/v1/location") {
+        return LOCATIONS_ID;
       }
 
       return null;
