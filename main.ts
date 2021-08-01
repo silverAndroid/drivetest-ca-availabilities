@@ -11,7 +11,7 @@ import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
 } from "./responseListener";
-import { login, selectLicenseType, findAvailabilities } from "./scraper";
+import { login, selectLicenseType, findAvailabilities, waitToEnterBookingPage } from "./scraper";
 import { Coordinates, Result } from "./utils";
 
 export interface CliOptions {
@@ -90,6 +90,7 @@ export async function main(options: CliOptions, chromePath?: string) {
 
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 
+    await waitToEnterBookingPage(page);
     logger.info("Logging in...");
     await login(page, email, licenseNumber, licenseExpiry);
     logger.info("Finding available times for a %s exam", licenseType);

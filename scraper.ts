@@ -27,6 +27,28 @@ import {
   waitForResponse,
 } from "./responseListener";
 
+export async function waitToEnterBookingPage(page: Page) {
+  logger.info("Please pass the HCaptcha to continue...");
+
+  await retryIfFail(
+    async function passCaptcha(page: Page) {
+      await page.waitForNavigation();
+
+      const { getInnerText } = await import("./evaluate");
+      const headerElem = await page.$("#headerBar");
+      const headerText = await headerElem?.evaluate(getInnerText);
+      if (headerText === 'CAPTCHA check') {
+        throw new Error('Failed to pass HCaptcha');
+      }
+    },
+    [page],
+    { useAllArgs: true }
+  );
+
+  logger.info("Waiting to be allowed to leave waiting room...");
+  await page.waitForSelector("#emailAddress");
+}
+
 export async function login(
   page: Page,
   email: string,
@@ -57,7 +79,7 @@ export async function login(
       );
       if (!res.ok()) {
         logger.error(
-          "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
+          "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again."
         );
         throw new Error("Failed to log in automatically");
       }
@@ -144,7 +166,11 @@ async function getDriveTestCenters(
           isInLicenseRange(licenseType, selectedLicenseClass)
         )
       ) {
-        logger.trace('%s does not have license type %s', name, selectedLicenseClass)
+        logger.trace(
+          "%s does not have license type %s",
+          name,
+          selectedLicenseClass
+        );
         return false;
       }
 
@@ -335,7 +361,7 @@ export async function* findAvailabilities(
     selectedLicenseClass
   );
   if (availableCenters.length === 0) {
-    logger.error('No Drivetest centers that match your preferences');
+    logger.error("No Drivetest centers that match your preferences");
   }
 
   const dates: Record<string, { name: string; time: Date }[]> = {};
