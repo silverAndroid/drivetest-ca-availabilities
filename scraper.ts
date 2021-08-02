@@ -79,9 +79,17 @@ export async function login(
         "https://drivetest.ca/booking/v1/driver/email"
       );
       if (!res.ok()) {
-        logger.error(
-          "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again."
-        );
+        const statusCode = res.status();
+        if (statusCode >= 400 && statusCode < 500) {
+          logger.error(
+            "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again."
+          );
+        } else if (statusCode >= 500) {
+          logger.error(
+            "Drivetest doesn't seem to be working right now, try again in a few minutes."
+          );
+          process.exit(1);
+        }
         throw new Error("Failed to log in automatically");
       }
     },
