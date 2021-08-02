@@ -169,8 +169,12 @@ async function getDriveTestCenters(
       })
     )
     .filter(({ name, latitude, longitude, licenceTestTypes }) => {
+      if (!licenceTestTypes) {
+        logger.trace("%s license types undefined", name);
+        return false;
+      }
+
       if (
-        licenceTestTypes &&
         !licenceTestTypes.some((licenseType) =>
           isInLicenseRange(licenseType, selectedLicenseClass)
         )
