@@ -376,6 +376,11 @@ export async function* findAvailabilities(
   );
   if (availableCenters.length === 0) {
     logger.error("No Drivetest centers that match your preferences");
+  } else {
+    logger.info(
+      "Going to be searching these DriveTest centers: %s",
+      availableCenters.map(({ name }) => name).join(", ")
+    );
   }
 
   const dates: Record<string, { name: string; time: Date }[]> = {};
