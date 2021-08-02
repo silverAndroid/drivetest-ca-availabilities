@@ -31,20 +31,30 @@ import {
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");
 
-  await retryIfFail(
-    async function passCaptcha(page: Page) {
-      await page.waitForNavigation();
+  try {
+    await retryIfFail(
+      async function passCaptcha(page: Page) {
+        await page.waitForNavigation();
 
-      const { getInnerText } = await import("./evaluate");
-      const headerElem = await page.$("#headerBar");
-      const headerText = await headerElem?.evaluate(getInnerText);
-      if (headerText === "CAPTCHA check") {
-        throw new Error("Failed to pass HCaptcha");
-      }
-    },
-    [page],
-    { useAllArgs: true }
-  );
+        const { getInnerText } = await import("./evaluate");
+        const headerElem = await page.$("#headerBar");
+        const headerText = await headerElem?.evaluate(getInnerText);
+        if (headerText === "CAPTCHA check") {
+          throw new Error("Failed to pass HCaptcha");
+        }
+      },
+      [page],
+      { useAllArgs: true }
+    );
+  } catch (error) {
+    logger.info(
+      "It's possible using Chromium won't be enough (as HCaptcha has flagged it as a browser Puppeteer uses), you'll need to download a Chromium-based browser. If you're not sure what to use, here's a list of browsers: https://techrrival.com/best-chromium-based-browsers/#List_of_Best_Chromium_Based_Browsers"
+    );
+    logger.info(
+      "Make sure not to use the browser you normally use because you run the risk of HCaptcha flagging the browser you surf with as a bot! Try running this again with the --chromiumPath option."
+    );
+    throw error;
+  }
 
   logger.info("Waiting to be allowed to leave waiting room...");
   await page.waitForSelector("#emailAddress");

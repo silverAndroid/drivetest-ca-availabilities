@@ -30,6 +30,7 @@ export interface CliOptions {
   radius: number;
   location: Coordinates;
   months: number;
+  chromiumPath: string;
 }
 
 async function checkCliUpdate() {
@@ -46,7 +47,7 @@ async function checkCliUpdate() {
   return null;
 }
 
-export async function main(options: CliOptions, chromePath?: string) {
+export async function main(options: CliOptions) {
   logger.info("Checking for updates...");
   const updateUrl = await checkCliUpdate();
   if (updateUrl) {
@@ -70,6 +71,7 @@ export async function main(options: CliOptions, chromePath?: string) {
     radius,
     location,
     months,
+    chromiumPath
   } = options;
 
   let browser: puppeteerType.Browser | undefined;
@@ -77,7 +79,7 @@ export async function main(options: CliOptions, chromePath?: string) {
     puppeteer.use(StealthPlugin());
     browser = await puppeteer.launch({
       headless: false,
-      executablePath: chromePath,
+      executablePath: chromiumPath,
       defaultViewport: null as unknown as undefined,
     });
     const page = await browser.newPage();

@@ -14,8 +14,17 @@ import {
 const program = new Command();
 
 setupCliInterface()
-  .then(async (options) => ({ options, chromePath: await downloadChrome() }))
-  .then(({ options, chromePath }) => main(options, chromePath))
+  .then(async (options) => {
+    if (options.chromiumPath) {
+      return options;
+    }
+
+    return {
+      ...options,
+      chromiumPath: await downloadChrome()
+    };
+  })
+  .then((options) => main(options))
   .catch((err: Error) => {
     if (err.stack) {
       logger.error(err.stack);
@@ -102,6 +111,10 @@ async function setupCliInterface() {
       "--licenseExpiry <licenseExpiry>",
       'License expiry date expressed in "YYYY/MM/DD" to log in with',
       verifyDateFormat
+    )
+    .option(
+      "--chromiumPath <chromiumPath>",
+      "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
     );
 
   program.parse();

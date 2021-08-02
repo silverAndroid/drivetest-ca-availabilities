@@ -4,7 +4,12 @@ import { promisify } from "util";
 
 import { CliOptions, main } from "./main";
 import { logger } from "./logger";
-import { parseCommanderInt, parseLocation, verifyDateFormat, verifyLicenseNumber } from "./utils";
+import {
+  parseCommanderInt,
+  parseLocation,
+  verifyDateFormat,
+  verifyLicenseNumber,
+} from "./utils";
 
 const readFileAsync = promisify(readFile);
 
@@ -55,24 +60,28 @@ async function setupCliInterface() {
       (val) => parseCommanderInt(val, "months"),
       6
     )
-      .option(
-        "--licenseType <licenseType>",
-        "License type exam to search for",
-        config.licenseType
-      )
-      .option("--email <email>", "Email to log in with", config.email)
-      .option(
-        "--licenseNumber <licenseNumber>",
-        "License number to log in with",
-        verifyLicenseNumber,
-        config.licenseNumber
-      )
-      .option(
-        "--licenseExpiry <licenseExpiry>",
-        'License expiry date expressed in "YYYY/MM/DD" to log in with',
-        verifyDateFormat,
-        config.licenseExpiry
-      );
+    .option(
+      "--licenseType <licenseType>",
+      "License type exam to search for",
+      config.licenseType
+    )
+    .option("--email <email>", "Email to log in with", config.email)
+    .option(
+      "--licenseNumber <licenseNumber>",
+      "License number to log in with",
+      verifyLicenseNumber,
+      config.licenseNumber
+    )
+    .option(
+      "--licenseExpiry <licenseExpiry>",
+      'License expiry date expressed in "YYYY/MM/DD" to log in with',
+      verifyDateFormat,
+      config.licenseExpiry
+    )
+    .option(
+      "--chromiumPath <chromiumPath>",
+      "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
+    );
 
   program.parse();
 
