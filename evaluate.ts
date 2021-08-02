@@ -11,3 +11,7 @@ export function waitForRescheduleModal(modalRescheduleBookingSelector: string) {
     }, 200);
   });
 }
+
+export function getInnerText(node: Element) {
+  return (node as HTMLElement).innerText;
+}

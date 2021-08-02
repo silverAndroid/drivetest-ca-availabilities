@@ -26,6 +26,7 @@ Options:
   --email <email>                  Email to log in with
   --licenseNumber <licenseNumber>  License number to log in with
   --licenseExpiry <licenseExpiry>  License expiry date expressed in "YYYY/MM/DD" to log in with
+  --chromiumPath <chromiumPath>    Path to Chromium-based browser executable. If option not used, Chromium will be downloaded to this folder.
   -h, --help                       display help for command
 ```
 

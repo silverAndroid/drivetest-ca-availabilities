@@ -1,14 +1,20 @@
-import { HTTPRequest, HTTPResponse, Page } from "puppeteer";
+import {
+  Request as HTTPRequest,
+  Response as HTTPResponse,
+  Page,
+} from "puppeteer";
 import { logger } from "./logger";
 
 export const BOOKING_DATES_ID = "booking_dates";
 export const BOOKING_TIMES_ID = "booking_times";
 export const ELIGIBILITY_CHECK_ID = "eligibility_check";
+export const LOCATIONS_ID = 'locations';
 
 type SavedResponseId =
   | typeof BOOKING_DATES_ID
   | typeof BOOKING_TIMES_ID
-  | typeof ELIGIBILITY_CHECK_ID;
+  | typeof ELIGIBILITY_CHECK_ID
+  | typeof LOCATIONS_ID;
 
 const responsePredicates: Record<
   SavedResponseId,
@@ -19,6 +25,7 @@ const responsePredicates: Record<
   [BOOKING_TIMES_ID]: (res) =>
     res.url().startsWith("https://drivetest.ca/booking/v1/booking"),
   [ELIGIBILITY_CHECK_ID]: "https://drivetest.ca/booking/v1/eligibilityCheck",
+  [LOCATIONS_ID]: "https://drivetest.ca/booking/v1/location",
 };
 const savedResponses: Partial<Record<SavedResponseId, Promise<HTTPResponse>>> =
   {};

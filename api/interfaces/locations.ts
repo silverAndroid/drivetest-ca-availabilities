@@ -34,7 +34,7 @@ export type DriveTestCenterLocation = Pick<
 > & {
   latitude: number;
   longitude: number;
-  licenseTestTypes: string[];
+  licenceTestTypes?: string[];
 };
 
 export interface CommercialLicenceClass {

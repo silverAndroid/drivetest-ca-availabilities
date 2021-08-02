@@ -24,8 +24,41 @@ import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
+  LOCATIONS_ID,
   waitForResponse,
 } from "./responseListener";
+
+export async function waitToEnterBookingPage(page: Page) {
+  logger.info("Please pass the HCaptcha to continue...");
+
+  try {
+    await retryIfFail(
+      async function passCaptcha(page: Page) {
+        await page.waitForNavigation();
+
+        const { getInnerText } = await import("./evaluate");
+        const headerElem = await page.$("#headerBar");
+        const headerText = await headerElem?.evaluate(getInnerText);
+        if (headerText === "CAPTCHA check") {
+          throw new Error("Failed to pass HCaptcha");
+        }
+      },
+      [page],
+      { useAllArgs: true }
+    );
+  } catch (error) {
+    logger.info(
+      "It's possible using Chromium won't be enough (as HCaptcha has flagged it as a browser Puppeteer uses), you'll need to download a Chromium-based browser. If you're not sure what to use, here's a list of browsers: https://techrrival.com/best-chromium-based-browsers/#List_of_Best_Chromium_Based_Browsers"
+    );
+    logger.info(
+      "Make sure not to use the browser you normally use because you run the risk of HCaptcha flagging the browser you surf with as a bot! Try running this again with the --chromiumPath option."
+    );
+    throw error;
+  }
+
+  logger.info("Waiting to be allowed to leave waiting room...");
+  await page.waitForSelector("#emailAddress");
+}
 
 export async function login(
   page: Page,
@@ -56,9 +89,17 @@ export async function login(
         "https://drivetest.ca/booking/v1/driver/email"
       );
       if (!res.ok()) {
-        logger.error(
-          "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again"
-        );
+        const statusCode = res.status();
+        if (statusCode >= 400 && statusCode < 500) {
+          logger.error(
+            "Failed to automatically log you in, please clear all cookies, refresh the page and log in manually. If you see the error again, you may need to wait a few hours before trying to log in again."
+          );
+        } else if (statusCode >= 500) {
+          logger.error(
+            "Drivetest doesn't seem to be working right now, try again in a few minutes."
+          );
+          process.exit(1);
+        }
         throw new Error("Failed to log in automatically");
       }
     },
@@ -108,13 +149,12 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
 }
 
 async function getDriveTestCenters(
+  page: Page,
   searchRadius: number,
   currentLocation: Coordinates,
   selectedLicenseClass: LicenseClass
 ) {
-  const response = await fetch("https://drivetest.ca/booking/v1/location", {
-    method: "GET",
-  });
+  const response = await waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
   logger.debug("Fetched drivetest locations");
@@ -127,7 +167,7 @@ async function getDriveTestCenters(
         isClosed,
         name,
         id,
-        licenceTestTypes: licenseTestTypes,
+        licenceTestTypes,
       }) => ({
         latitude: Number(latitude),
         longitude: Number(longitude),
@@ -135,15 +175,25 @@ async function getDriveTestCenters(
         isClosed,
         name,
         id,
-        licenseTestTypes,
+        licenceTestTypes,
       })
     )
-    .filter(({ latitude, longitude, licenseTestTypes }) => {
+    .filter(({ name, latitude, longitude, licenceTestTypes }) => {
+      if (!licenceTestTypes) {
+        logger.trace("%s license types undefined", name);
+        return false;
+      }
+
       if (
-        !licenseTestTypes.some((licenseType) =>
+        !licenceTestTypes.some((licenseType) =>
           isInLicenseRange(licenseType, selectedLicenseClass)
         )
       ) {
+        logger.trace(
+          "%s does not have license type %s",
+          name,
+          selectedLicenseClass
+        );
         return false;
       }
 
@@ -152,6 +202,12 @@ async function getDriveTestCenters(
         distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers) >
         searchRadius
       ) {
+        logger.trace(
+          "%s too far away; search radius: %d, distance: %d",
+          name,
+          searchRadius,
+          distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers)
+        );
         return false;
       }
 
@@ -323,10 +379,19 @@ export async function* findAvailabilities(
   Record<string, { name: string; time: Date }[]>
 > {
   const availableCenters = await getDriveTestCenters(
+    page,
     searchRadius,
     currentLocation,
     selectedLicenseClass
   );
+  if (availableCenters.length === 0) {
+    logger.error("No Drivetest centers that match your preferences");
+  } else {
+    logger.info(
+      "Going to be searching these DriveTest centers: %s",
+      availableCenters.map(({ name }) => name).join(", ")
+    );
+  }
 
   const dates: Record<string, { name: string; time: Date }[]> = {};
   for (const driveCenter of availableCenters) {

@@ -1,7 +1,8 @@
 {
   "pkg": {
     "assets": [
-      "./evaluate.js"
+      "./evaluate.js",
+      "node_modules/puppeteer-extra-plugin-stealth/**/*.*"
     ]
   }
 }
