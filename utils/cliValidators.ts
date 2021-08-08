@@ -30,8 +30,9 @@ export function verifyDateFormat(date: string) {
 export function parseLocation(location: string): Coordinates {
   const coordinates = location
     .split(",")
+    .filter((coordinate) => coordinate.length > 0)
     .map((coordinate) => Number(coordinate));
-  if (coordinates.length < 2) {
+  if (coordinates.length < 2 || coordinates.some((coordinate) => isNaN(coordinate))) {
     throw new InvalidOptionArgumentError(
       "location coordinates must follow format <latitude>,<longitude>!"
     );
