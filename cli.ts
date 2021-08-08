@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { readFile } from "fs";
+import os from 'os';
 import { promisify } from "util";
 
 import { CliOptions, main } from "./main";
@@ -77,11 +78,22 @@ async function setupCliInterface() {
       'License expiry date expressed in "YYYY/MM/DD" to log in with',
       verifyDateFormat,
       config.licenseExpiry
-    )
-    .option(
-      "--chromiumPath <chromiumPath>",
-      "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
     );
+
+  if (os.arch() === 'arm64') {
+    logger.warn("Chromium doesn't have any arm64 binaries so --chromiumPath is a required option");
+    program
+      .requiredOption(
+        "--chromiumPath <chromiumPath>",
+        "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
+      );
+  } else {
+    program
+      .option(
+        "--chromiumPath <chromiumPath>",
+        "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
+      );
+  }
 
   program.parse();
 
