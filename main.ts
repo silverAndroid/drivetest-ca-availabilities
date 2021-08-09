@@ -159,5 +159,6 @@ export async function main(options: CliOptions) {
     }
   } finally {
     browser?.close();
+    logger.info('If you appreciate my work, feel free to buy me a ☕️ (coffee) here 😊: https://www.buymeacoffee.com/rushilperera')
   }
 }
