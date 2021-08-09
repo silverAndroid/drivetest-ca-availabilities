@@ -71,7 +71,7 @@ export async function main(options: CliOptions) {
     radius,
     location,
     months,
-    chromiumPath
+    chromiumPath,
   } = options;
 
   let browser: puppeteerType.Browser | undefined;
@@ -109,6 +109,12 @@ export async function main(options: CliOptions) {
     logger.info("Finding available times for a %s exam", licenseType);
     await selectLicenseType(page, licenseType);
 
+    const foundResults: {
+      type: Result.FOUND;
+      name: string;
+      time: Date;
+    }[] = [];
+
     for await (const result of findAvailabilities(
       page,
       radius,
@@ -132,6 +138,20 @@ export async function main(options: CliOptions) {
       } else {
         logger.info(
           "Found new time for location %s, %s",
+          result.name,
+          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
+        );
+        foundResults.push(result);
+      }
+    }
+
+    if (foundResults.length === 0) {
+      logger.error("No timeslots found");
+    } else {
+      logger.info("Found %d available time slots:");
+      for (const result of foundResults) {
+        logger.info(
+          "• %s, %s",
           result.name,
           dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
         );
