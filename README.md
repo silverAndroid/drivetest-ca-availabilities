@@ -4,6 +4,8 @@ This CLI tool written in Node.js will log in to [Ontario's driving test booking 
 
 I worked on this tool during some of my spare time because I found it difficult to find open spots for driving tests due to the way the website was designed. It uses [Puppeteer](https://github.com/puppeteer/puppeteer) to walk through the website and extract information as if it was a regular user (with some rate-limiting as to not overload the website with requests).
 
+<a href="https://www.buymeacoffee.com/rushilperera" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" height="60px"></a>
+
 ## Using the prebuilt binary
 
 You can find a prebuilt binary in the Releases section with a list of the options below that you will need to pass (the ones that have a default are optional).
