@@ -8,7 +8,7 @@ import { logger } from "./logger";
 export const BOOKING_DATES_ID = "booking_dates";
 export const BOOKING_TIMES_ID = "booking_times";
 export const ELIGIBILITY_CHECK_ID = "eligibility_check";
-export const LOCATIONS_ID = 'locations';
+export const LOCATIONS_ID = "locations";
 
 type SavedResponseId =
   | typeof BOOKING_DATES_ID
@@ -34,32 +34,41 @@ export function listenForResponses(
   page: Page,
   shouldSaveResponse: (req: HTTPRequest) => SavedResponseId | null
 ) {
-  page.on("request", (req: HTTPRequest) => {
-    const savedId = shouldSaveResponse(req);
-    if (savedId) {
-      logger.debug("waiting for response %s", savedId);
-      savedResponses[savedId] = new Promise(async (resolve) => {
-        while (true) {
-          const res = req.response();
-          if (res) {
-            logger.debug("received response %s", savedId);
-            return resolve(res);
-          }
+  page.on("request", (req: HTTPRequest | undefined) => {
+    if (req) {
+      const savedId = shouldSaveResponse(req);
+      if (savedId) {
+        logger.debug("waiting for response %s", savedId);
+        savedResponses[savedId] = new Promise(async (resolve) => {
+          while (true) {
+            const res = req.response();
+            if (res) {
+              logger.debug("received response %s", savedId);
+              return resolve(res);
+            }
 
-          await page.waitForTimeout(200);
-        }
-      });
+            await page.waitForTimeout(200);
+          }
+        });
+      }
+    } else {
+      logger.warn("Received undefined request");
     }
   });
 }
 
-export async function waitForResponse(page: Page, responseId: SavedResponseId) {
-  try {
-    return await page.waitForResponse(responsePredicates[responseId], {
+export async function waitForResponse(
+  page: Page,
+  responseId: SavedResponseId
+): Promise<HTTPResponse> {
+  const savedResponse = savedResponses[responseId];
+  const response = await page
+    .waitForResponse(responsePredicates[responseId], {
       timeout: 5000,
+    })
+    .catch(() => {
+      logger.trace("failed to wait for response");
+      return savedResponse;
     });
-  } catch (error) {
-    const savedResponse = savedResponses[responseId];
-    return savedResponse!;
-  }
+  return (await Promise.race([response, savedResponse]))!;
 }
