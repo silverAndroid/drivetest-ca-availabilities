@@ -61,8 +61,16 @@ export async function waitForResponse(
   page: Page,
   responseId: SavedResponseId
 ): Promise<HTTPResponse> {
-  const getSavedResponse = () => savedResponses[responseId];
-  const response = await page
+  const getSavedResponse: () => Promise<HTTPResponse> = () => {
+    const savedResponse = savedResponses[responseId];
+    if (savedResponse) {
+      return savedResponse!;
+    }
+
+    return page.waitForTimeout(200).then(() => getSavedResponse());
+  };
+
+  const waitingResponse = await page
     .waitForResponse(responsePredicates[responseId], {
       timeout: 5000,
     })
@@ -70,5 +78,7 @@ export async function waitForResponse(
       logger.trace("failed to wait for response");
       return getSavedResponse();
     });
-  return (await Promise.race([response, getSavedResponse()]))!;
+  const response = (await Promise.race([waitingResponse, getSavedResponse()]))!;
+  logger.trace("received response %s", responseId);
+  return response;
 }
