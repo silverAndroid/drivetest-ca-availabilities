@@ -61,14 +61,14 @@ export async function waitForResponse(
   page: Page,
   responseId: SavedResponseId
 ): Promise<HTTPResponse> {
-  const savedResponse = savedResponses[responseId];
+  const getSavedResponse = () => savedResponses[responseId];
   const response = await page
     .waitForResponse(responsePredicates[responseId], {
       timeout: 5000,
     })
     .catch(() => {
       logger.trace("failed to wait for response");
-      return savedResponse;
+      return getSavedResponse();
     });
-  return (await Promise.race([response, savedResponse]))!;
+  return (await Promise.race([response, getSavedResponse()]))!;
 }
