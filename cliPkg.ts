@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import os from 'os';
+import os from "os";
 import * as path from "path";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
 
@@ -22,7 +22,7 @@ setupCliInterface()
 
     return {
       ...options,
-      chromiumPath: await downloadChrome()
+      chromiumPath: await downloadChrome(),
     };
   })
   .then((options) => main(options))
@@ -59,21 +59,21 @@ async function downloadChrome() {
       if (!progressBar) {
         progressBar = new ProgressBar(
           `Downloading compatible version of Chrome - ${toMegabytes(
-            total
+            total,
           )} [:bar] :percent :etas `,
           {
             complete: "=",
             incomplete: " ",
             width: 20,
             total,
-          }
+          },
         );
       }
 
       const delta = downloaded - lastDownloadedBytes;
       lastDownloadedBytes = downloaded;
       progressBar.tick(delta);
-    }
+    },
   );
 
   return revisionInfo.executablePath;
@@ -85,48 +85,48 @@ async function setupCliInterface() {
       "-r, --radius <radius>",
       "search radius in kilometers from where you are",
       (val) => parseCommanderInt(val, "radius"),
-      20
+      20,
     )
     .requiredOption(
       "-l, --location <location>",
       'your current location expressed in "latitude,longitude" (eg. 43.6426445,-79.3871645).',
-      parseLocation
+      parseLocation,
     )
     .option(
       "-m, --months <months>",
       "Number of months to look ahead",
       (val) => parseCommanderInt(val, "months"),
-      6
+      6,
     )
     .requiredOption(
       "--licenseType <licenseType>",
-      "License type exam to search for"
+      "License type exam to search for",
     )
     .requiredOption("--email <email>", "Email to log in with")
     .requiredOption(
       "--licenseNumber <licenseNumber>",
       "License number to log in with",
-      verifyLicenseNumber
+      verifyLicenseNumber,
     )
     .requiredOption(
       "--licenseExpiry <licenseExpiry>",
       'License expiry date expressed in "YYYY/MM/DD" to log in with',
-      verifyDateFormat
+      verifyDateFormat,
     );
 
-  if (os.arch() === 'arm64') {
-    logger.warn("Chromium doesn't have any arm64 binaries so --chromiumPath is a required option");
-    program
-      .requiredOption(
-        "--chromiumPath <chromiumPath>",
-        "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
-      );
+  if (os.arch() === "arm64") {
+    logger.warn(
+      "Chromium doesn't have any arm64 binaries so --chromiumPath is a required option",
+    );
+    program.requiredOption(
+      "--chromiumPath <chromiumPath>",
+      "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder.",
+    );
   } else {
-    program
-      .option(
-        "--chromiumPath <chromiumPath>",
-        "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder."
-      );
+    program.option(
+      "--chromiumPath <chromiumPath>",
+      "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If option not used, Chromium will be downloaded to this folder.",
+    );
   }
 
   program.parse();

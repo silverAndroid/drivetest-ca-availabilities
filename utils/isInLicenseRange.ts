@@ -8,7 +8,7 @@ function generateCharArray(char1: string, char2: string) {
 
 export function isInLicenseRange(
   licenseRange: string,
-  selectedLicense: string
+  selectedLicense: string,
 ) {
   const rangeArr = licenseRange.split("-");
   if (rangeArr.length === 2) {

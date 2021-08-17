@@ -35,7 +35,7 @@ export interface CliOptions {
 
 async function checkCliUpdate() {
   const res = await fetch(
-    "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest"
+    "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest",
   );
   const { version: currentVersion } = require("./package.json");
   const newVersion = res.url.split("/").slice(-1)[0];
@@ -53,13 +53,13 @@ export async function main(options: CliOptions) {
   if (updateUrl) {
     logger.info(
       "Found new update at %s! Please update to the latest version.",
-      updateUrl
+      updateUrl,
     );
     return;
   } else {
     logger.info(
       "No new updates found, current version %s",
-      require("./package.json").version
+      require("./package.json").version,
     );
   }
 
@@ -126,20 +126,20 @@ export async function main(options: CliOptions) {
         logger.info(
           "Searching %s at location %s",
           dayjs().month(result.month).format("MMMM"),
-          result.name
+          result.name,
         );
       } else if (result.type === Result.FAILED) {
         logger.error(
           "Couldn't search %s due to error %d:%s",
           result.name,
           result.error.code,
-          result.error.message
+          result.error.message,
         );
       } else {
         logger.info(
           "Found new time for location %s, %s",
           result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
+          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
         );
         foundResults.push(result);
       }
@@ -153,14 +153,14 @@ export async function main(options: CliOptions) {
         logger.info(
           "• %s, %s",
           result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a")
+          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
         );
       }
     }
   } finally {
     browser?.close();
     logger.info(
-      "If you appreciate my work, feel free to buy me a ☕️ (coffee) here 😊: https://www.buymeacoffee.com/rushilperera"
+      "If you appreciate my work, feel free to buy me a ☕️ (coffee) here 😊: https://www.buymeacoffee.com/rushilperera",
     );
   }
 }

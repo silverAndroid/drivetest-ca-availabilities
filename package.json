@@ -11,7 +11,8 @@
     "start": "node cli.js",
     "build": "tsc",
     "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
-    "package:dev": "yarn build && yarn package"
+    "package:dev": "yarn build && yarn package",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.8",
@@ -20,7 +21,10 @@
     "@types/puppeteer": "^5.4.4",
     "@types/semver": "^7.3.5",
     "@types/tough-cookie": "^4.0.0",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.2",
     "pkg": "^5.1.0",
+    "prettier": "2.3.2",
     "typescript": "^4.1.3"
   },
   "dependencies": {
@@ -36,5 +40,8 @@
     "puppeteer-extra": "^3.1.18",
     "puppeteer-extra-plugin-stealth": "^2.7.8",
     "semver": "^7.3.5"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }

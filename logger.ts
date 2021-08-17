@@ -17,9 +17,9 @@ export const logger = pino(
     { stream: prettyStream, level: "info" },
     {
       stream: createWriteStream(
-        `./drivetest-${dayjs().format("YYYY-MM-DD_HH-mm-ss")}.log`
+        `./drivetest-${dayjs().format("YYYY-MM-DD_HH-mm-ss")}.log`,
       ),
       level: "trace",
     },
-  ])
+  ]),
 );

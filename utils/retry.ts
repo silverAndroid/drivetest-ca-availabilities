@@ -8,7 +8,7 @@ import { logger } from "../logger";
 export async function retryIfFail<T>(
   fn: (...args: any[]) => T,
   fnArgs: [Page, ...any[]],
-  { useAllArgs = false, maxRetries = 3, waitAfterFailMs = 1000 } = {}
+  { useAllArgs = false, maxRetries = 3, waitAfterFailMs = 1000 } = {},
 ) {
   let i = 0;
   const [page, ...args] = fnArgs;
@@ -16,11 +16,14 @@ export async function retryIfFail<T>(
     try {
       logger.debug("Attempt %d: calling %s", i + 1, fn.name);
       await fn(...(useAllArgs ? fnArgs : args));
-      logger.debug('Called %s successfully', fn.name);
+      logger.debug("Called %s successfully", fn.name);
       return;
     } catch (error) {
       const errorMessage = error.message.toLowerCase();
-      if (errorMessage.includes("browser has disconnected") || errorMessage.includes('target closed')) {
+      if (
+        errorMessage.includes("browser has disconnected") ||
+        errorMessage.includes("target closed")
+      ) {
         throw error;
       }
 
@@ -30,7 +33,7 @@ export async function retryIfFail<T>(
         i + 1,
         fn.name,
         seconds,
-        seconds === 1 ? "second" : "seconds"
+        seconds === 1 ? "second" : "seconds",
       );
       logger.debug("%s", error.stack);
       await page.waitForTimeout(waitAfterFailMs);
@@ -39,6 +42,6 @@ export async function retryIfFail<T>(
   }
 
   throw new Error(
-    `All ${maxRetries} attempts failed. Couldn't call ${fn.name} successfully`
+    `All ${maxRetries} attempts failed. Couldn't call ${fn.name} successfully`,
   );
 }

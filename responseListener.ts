@@ -32,7 +32,7 @@ const savedResponses: Partial<Record<SavedResponseId, Promise<HTTPResponse>>> =
 
 export function listenForResponses(
   page: Page,
-  shouldSaveResponse: (req: HTTPRequest) => SavedResponseId | null
+  shouldSaveResponse: (req: HTTPRequest) => SavedResponseId | null,
 ) {
   page.on("request", (req: HTTPRequest | undefined) => {
     if (req) {
@@ -59,7 +59,7 @@ export function listenForResponses(
 
 export async function waitForResponse(
   page: Page,
-  responseId: SavedResponseId
+  responseId: SavedResponseId,
 ): Promise<HTTPResponse> {
   const getSavedResponse: () => Promise<HTTPResponse> = () => {
     const savedResponse = savedResponses[responseId];

@@ -3,7 +3,7 @@ export function waitForRescheduleModal(modalRescheduleBookingSelector: string) {
     const intervalId = setInterval(() => {
       if (
         (document.querySelector(modalRescheduleBookingSelector) as HTMLElement)
-          .innerText === 'RESCHEDULE'
+          .innerText === "RESCHEDULE"
       ) {
         clearInterval(intervalId);
         resolve(undefined);
