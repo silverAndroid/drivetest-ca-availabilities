@@ -196,6 +196,10 @@ export async function main(options: CliOptions) {
           }
         }
       }
+      
+      const pauseSeconds = 3;
+      logger.info('Pausing %d seconds to prevent overload of website', pauseSeconds);
+      await page.waitForTimeout(pauseSeconds * 1000);
     } while (enableContinuousSearching);
   } finally {
     if (shouldCloseBrowserWhenDone) {
