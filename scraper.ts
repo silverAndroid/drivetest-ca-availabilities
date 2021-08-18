@@ -1,4 +1,4 @@
-import { Page } from "puppeteer";
+import { Page, Response } from "puppeteer";
 import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
@@ -148,7 +148,7 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
   }
 }
 
-async function getDriveTestCenters(
+export async function getDriveTestCenters(
   page: Page,
   searchRadius: number,
   currentLocation: Coordinates,
@@ -249,33 +249,48 @@ async function* findAvailableDates(
   const NEXT_BTN_SELECTOR =
     "#driver-info > div.ng-scope > div.calendar.ng-scope > div.calendar-header > a.calendar-month-control.ion-chevron-right";
 
-  await page.waitForSelector(LOCATION_SELECTOR);
-  await retryIfFail(
-    async function selectLocation(
-      locationSelector: string,
-      locationContinueBtnSelector: string,
-    ) {
-      await rateLimiter();
-      logger.debug("clicking %s", locationSelector);
-      await page.click(locationSelector);
-      logger.debug("clicking %s", locationContinueBtnSelector);
-      await page.click(locationContinueBtnSelector);
-    },
-    [page, LOCATION_SELECTOR, LOCATION_CONTINUE_BTN_SELECTOR],
-    { maxRetries: 100 },
-  );
+  async function clickLocation() {
+    await page.waitForSelector(LOCATION_SELECTOR);
+    await retryIfFail(
+      async function selectLocation(
+        locationSelector: string,
+        locationContinueBtnSelector: string,
+      ) {
+        await rateLimiter();
+        logger.debug("clicking %s", locationSelector);
+        await page.click(locationSelector);
+        logger.debug("clicking %s", locationContinueBtnSelector);
+        await page.click(locationContinueBtnSelector);
+      },
+      [page, LOCATION_SELECTOR, LOCATION_CONTINUE_BTN_SELECTOR],
+      { maxRetries: 100 },
+    );
+  }
+  await clickLocation();
 
   let availableDates: Date[] = [];
   do {
     let month = 0;
     logger.debug("waiting for response with dates for location");
-    const bookingDateResponse = await waitForResponse(page, BOOKING_DATES_ID);
-    month =
-      Number(
-        new URLSearchParams(bookingDateResponse.url().split("?").pop()).get(
-          "month",
-        ),
-      ) - 1;
+
+    let bookingDateResponse: Response;
+    try {
+      bookingDateResponse = await waitForResponse(page, BOOKING_DATES_ID);
+      month =
+        Number(
+          new URLSearchParams(bookingDateResponse.url().split("?").pop()).get(
+            "month",
+          ),
+        ) - 1;
+    } catch (error) {
+      await clickLocation();
+      month = 0;
+      logger.error(
+        "Something happened trying to wait for the request after selecting a location. Trying again...",
+      );
+      continue;
+    }
+
     const bookingDateJson =
       (await bookingDateResponse.json()) as BookingDateResponse;
     const { availableBookingDates, statusCode } = bookingDateJson;
@@ -353,10 +368,7 @@ async function* findAvailableDates(
 
 export async function* findAvailabilities(
   page: Page,
-  searchRadius: number,
-  currentLocation: Coordinates,
-  selectedLicenseClass: LicenseClass,
-  numMonths = 6
+  availableCenters: DriveTestCenterLocation[],
   numMonths = 6,
 ): AsyncGenerator<
   | {
@@ -379,21 +391,6 @@ export async function* findAvailabilities(
     },
   Record<string, { name: string; time: Date }[]>
 > {
-  const availableCenters = await getDriveTestCenters(
-    page,
-    searchRadius,
-    currentLocation,
-    selectedLicenseClass,
-  );
-  if (availableCenters.length === 0) {
-    logger.error("No Drivetest centers that match your preferences");
-  } else {
-    logger.info(
-      "Going to be searching these DriveTest centers: %s",
-      availableCenters.map(({ name }) => name).join(", "),
-    );
-  }
-
   const dates: Record<string, { name: string; time: Date }[]> = {};
   for (const driveCenter of availableCenters) {
     const availableDates = findAvailableDates(page, driveCenter, numMonths);

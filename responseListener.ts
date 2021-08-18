@@ -61,14 +61,7 @@ export async function waitForResponse(
   page: Page,
   responseId: SavedResponseId,
 ): Promise<HTTPResponse> {
-  const getSavedResponse: () => Promise<HTTPResponse> = () => {
-    const savedResponse = savedResponses[responseId];
-    if (savedResponse) {
-      return savedResponse!;
-    }
-
-    return page.waitForTimeout(200).then(() => getSavedResponse());
-  };
+  const getSavedResponse = () => savedResponses[responseId]!;
 
   const waitingResponse = await page
     .waitForResponse(responsePredicates[responseId], {

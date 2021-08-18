@@ -19,6 +19,7 @@ import {
   selectLicenseType,
   findAvailabilities,
   waitToEnterBookingPage,
+  getDriveTestCenters,
 } from "./scraper";
 import { Coordinates, Result } from "./utils";
 
@@ -109,54 +110,87 @@ export async function main(options: CliOptions) {
     logger.info("Finding available times for a %s exam", licenseType);
     await selectLicenseType(page, licenseType);
 
+    const availableCenters = await getDriveTestCenters(
+      page,
+      radius,
+      location,
+      licenseType,
+    );
+    if (availableCenters.length === 0) {
+      logger.error("No Drivetest centers that match your preferences");
+      return;
+    } else {
+      logger.info(
+        "Going to be searching these DriveTest centers: %s",
+        availableCenters
+          .map(({ name, distance }) => `${name} (${distance.toFixed(2)} km)`)
+          .join(", "),
+      );
+    }
+
     const foundResults: {
       type: Result.FOUND;
       name: string;
       time: Date;
     }[] = [];
 
-    for await (const result of findAvailabilities(
-      page,
-      radius,
-      location,
-      licenseType,
-      months
-    )) {
-      if (result.type === Result.SEARCHING) {
-        logger.info(
-          "Searching %s at location %s",
-          dayjs().month(result.month).format("MMMM"),
-          result.name,
-        );
-      } else if (result.type === Result.FAILED) {
-        logger.error(
-          "Couldn't search %s due to error %d:%s",
-          result.name,
-          result.error.code,
-          result.error.message,
-        );
-      } else {
-        logger.info(
-          "Found new time for location %s, %s",
-          result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
-        );
-        foundResults.push(result);
+    do {
+      for await (const result of findAvailabilities(
+        page,
+        availableCenters,
+        months,
+      )) {
+        if (result.type === Result.SEARCHING) {
+          logger.info(
+            "Searching %s at location %s",
+            dayjs().month(result.month).format("MMMM"),
+            result.name,
+          );
+        } else if (result.type === Result.FAILED) {
+          logger.error(
+            "Couldn't search %s due to error %d:%s",
+            result.name,
+            result.error.code,
+            result.error.message,
+          );
+        } else {
+          logger.info(
+            "Found new time for location %s, %s",
+            result.name,
+            dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
+          );
+          foundResults.push(result);
+        }
       }
-    }
 
-    if (foundResults.length === 0) {
-      logger.error("No timeslots found");
-    } else {
-      logger.info("Found %d available time slots:");
-      for (const result of foundResults) {
-        logger.info(
-          "• %s, %s",
-          result.name,
-          dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
-        );
+      if (foundResults.length === 0) {
+        logger.error("No timeslots found");
+      } else {
+        logger.info("Found %d available time slots:");
+        for (const result of foundResults) {
+          logger.info(
+            "• %s, %s",
+            result.name,
+            dayjs(result.time).format("MMMM DD, YYYY [at] hh:mm a"),
+          );
+        }
+
+        if (enableContinuousSearching) {
+          const inquirer = await import("inquirer");
+          const [shouldContinueSearching] = await inquirer.prompt([
+            {
+              type: "confirm",
+              name: "continue",
+              message: "Would you like to search for more time slots?",
+            },
+          ]);
+          console.log(shouldContinueSearching);
+          if (!shouldContinueSearching) {
+            break;
+          }
+        }
       }
-    }
+    } while (enableContinuousSearching);
   } finally {
     browser?.close();
     logger.info(
