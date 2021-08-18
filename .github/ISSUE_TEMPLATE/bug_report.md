@@ -20,8 +20,8 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Log output**
+Add the contents of your most recent log file here (not the output on the terminal). Make sure to surround the logs with this ```, so that it'll be more readable.
 
 **Desktop (please complete the following information):**
 
