@@ -15,9 +15,9 @@ export async function retryIfFail<T>(
   while (maxRetries !== 0 && i < maxRetries) {
     try {
       logger.debug("Attempt %d: calling %s", i + 1, fn.name);
-      await fn(...(useAllArgs ? fnArgs : args));
+      const value = await fn(...(useAllArgs ? fnArgs : args));
       logger.debug("Called %s successfully", fn.name);
-      return;
+      return value;
     } catch (error) {
       const errorMessage = error.message.toLowerCase();
       if (

@@ -319,24 +319,26 @@ async function* findAvailableDates(
         const DATE_SELECTOR = `a[title="${day}"]`;
         const CALENDAR_CONTINUE_BTN_SELECTOR = "#calendarSubmit > button";
 
-        retryIfFail(
+        const availableBookingTimes = await retryIfFail(
           async function selectDate(dateSelector, calendarContinueBtnSelector) {
             await rateLimiter();
             logger.debug("clicking %s", dateSelector);
             await page.click(dateSelector);
             logger.debug("clicking %s", calendarContinueBtnSelector);
             await page.click(calendarContinueBtnSelector);
+
+            const bookingTimesResponse = await waitForResponse(
+              page,
+              BOOKING_TIMES_ID,
+            );
+            const { availableBookingTimes = [] } =
+              (await bookingTimesResponse.json()) as BookingTimeResponse;
+            return availableBookingTimes;
           },
           [page, DATE_SELECTOR, CALENDAR_CONTINUE_BTN_SELECTOR],
           { maxRetries: 100 },
         );
 
-        const bookingTimesResponse = await waitForResponse(
-          page,
-          BOOKING_TIMES_ID,
-        );
-        const { availableBookingTimes = [] } =
-          (await bookingTimesResponse.json()) as BookingTimeResponse;
         availableDates = [
           ...availableDates,
           ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
