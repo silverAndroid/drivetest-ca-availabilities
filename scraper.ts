@@ -169,16 +169,19 @@ export async function getDriveTestCenters(
         id,
         licenceTestTypes,
       }) => ({
-        latitude: Number(latitude),
-        longitude: Number(longitude),
         locationHours,
         isClosed,
         name,
         id,
         licenceTestTypes,
+        distance: distanceTo(
+          currentLocation,
+          { latitude: Number(latitude), longitude: Number(longitude) },
+          Unit.Kilometers,
+        ),
       }),
     )
-    .filter(({ name, latitude, longitude, licenceTestTypes }) => {
+    .filter(({ name, distance, licenceTestTypes }) => {
       if (!licenceTestTypes) {
         logger.trace("%s license types undefined", name);
         return false;
@@ -198,21 +201,22 @@ export async function getDriveTestCenters(
       }
 
       // if centre outside of search radius, remove from array
-      if (
-        distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers) >
-        searchRadius
-      ) {
+      if (distance > searchRadius) {
         logger.trace(
           "%s too far away; search radius: %d, distance: %d",
           name,
           searchRadius,
-          distanceTo(currentLocation, { latitude, longitude }, Unit.Kilometers),
+          distance,
         );
         return false;
       }
 
       return true;
-    });
+    })
+    .sort(
+      ({ distance: distanceA }, { distance: distanceB }) =>
+        distanceA - distanceB,
+    );
 }
 
 const rateLimiter = RateLimit(15, { uniformDistribution: true });

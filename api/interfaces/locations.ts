@@ -32,8 +32,8 @@ export type DriveTestCenterLocation = Pick<
   DriveTestCenter,
   "locationHours" | "isClosed" | "name" | "id"
 > & {
-  latitude: number;
-  longitude: number;
+  /** distance in km */
+  distance: number;
   licenceTestTypes?: string[];
 };
 
