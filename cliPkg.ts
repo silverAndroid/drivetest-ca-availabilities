@@ -112,6 +112,10 @@ async function setupCliInterface() {
       "--licenseExpiry <licenseExpiry>",
       'License expiry date expressed in "YYYY/MM/DD" to log in with',
       verifyDateFormat,
+    )
+    .option(
+      "--enableContinuousSearching",
+      "When added, the script will continue searching until the user's session is over",
     );
 
   if (os.arch() === "arm64") {

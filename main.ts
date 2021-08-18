@@ -32,6 +32,7 @@ export interface CliOptions {
   location: Coordinates;
   months: number;
   chromiumPath: string;
+  enableContinuousSearching: boolean;
 }
 
 async function checkCliUpdate() {
@@ -73,9 +74,11 @@ export async function main(options: CliOptions) {
     location,
     months,
     chromiumPath,
+    enableContinuousSearching,
   } = options;
 
   let browser: puppeteerType.Browser | undefined;
+  let shouldCloseBrowserWhenDone = true;
   try {
     puppeteer.use(StealthPlugin());
     browser = await puppeteer.launch({
@@ -165,8 +168,11 @@ export async function main(options: CliOptions) {
 
       if (foundResults.length === 0) {
         logger.error("No timeslots found");
+        if (enableContinuousSearching) {
+          logger.info("Continuous searching on, searching again");
+        }
       } else {
-        logger.info("Found %d available time slots:");
+        logger.info("Found %d available time slots:", foundResults.length);
         for (const result of foundResults) {
           logger.info(
             "• %s, %s",
@@ -177,22 +183,24 @@ export async function main(options: CliOptions) {
 
         if (enableContinuousSearching) {
           const inquirer = await import("inquirer");
-          const [shouldContinueSearching] = await inquirer.prompt([
+          const { shouldContinue } = await inquirer.prompt([
             {
               type: "confirm",
-              name: "continue",
+              name: "shouldContinue",
               message: "Would you like to search for more time slots?",
             },
           ]);
-          console.log(shouldContinueSearching);
-          if (!shouldContinueSearching) {
+          if (!shouldContinue) {
+            shouldCloseBrowserWhenDone = false;
             break;
           }
         }
       }
     } while (enableContinuousSearching);
   } finally {
-    browser?.close();
+    if (shouldCloseBrowserWhenDone) {
+      browser?.close();
+    }
     logger.info(
       "If you appreciate my work, feel free to buy me a ☕️ (coffee) here 😊: https://www.buymeacoffee.com/rushilperera",
     );
