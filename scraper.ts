@@ -53,6 +53,9 @@ export async function waitToEnterBookingPage(page: Page) {
     logger.info(
       "Make sure not to use the browser you normally use because you run the risk of HCaptcha flagging the browser you surf with as a bot! Try running this again with the --chromiumPath option.",
     );
+    logger.info(
+      "If you're still failing the CAPTCHA test after installing a new browser, I find deleting the cookies for the site very helpful.",
+    );
     throw error;
   }
 
