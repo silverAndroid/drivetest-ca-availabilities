@@ -22,6 +22,7 @@ import {
   getDriveTestCenters,
 } from "./scraper";
 import { Coordinates, Result } from "./utils";
+import { sleep } from "./utils/sleep";
 
 export interface CliOptions {
   email: string;
@@ -43,7 +44,10 @@ async function checkCliUpdate() {
   const newVersion = res.url.split("/").slice(-1)[0];
 
   if (semver.lt(currentVersion, newVersion)) {
-    return res.url;
+    return {
+      url: res.url,
+      isMajorUpdate: semver.diff(currentVersion, newVersion) === "major",
+    };
   }
 
   return null;
@@ -51,13 +55,29 @@ async function checkCliUpdate() {
 
 export async function main(options: CliOptions) {
   logger.info("Checking for updates...");
-  const updateUrl = await checkCliUpdate();
-  if (updateUrl) {
-    logger.info(
-      "Found new update at %s! Please update to the latest version.",
-      updateUrl,
-    );
-    return;
+  const update = await checkCliUpdate();
+  if (update) {
+    const { url: updateUrl, isMajorUpdate } = update;
+
+    if (isMajorUpdate) {
+      logger.info(
+        "There's a new major version of this tool. Go to %s if you want to see what's changed!",
+        "https://github.com/silverAndroid/drivetest-ca-availabilities/releases",
+      );
+      logger.info(
+        "v2.0.0: There's now a GUI version in case using a CLI tool is unfamiliar to you!",
+      );
+      logger.warn(
+        "There won't be any more updates unless you update to the new version!",
+      );
+      await sleep(3000);
+    } else {
+      logger.info(
+        "Found new update at %s! Please update to the latest version.",
+        updateUrl,
+      );
+      return;
+    }
   } else {
     logger.info(
       "No new updates found, current version %s",
@@ -196,9 +216,12 @@ export async function main(options: CliOptions) {
           }
         }
       }
-      
+
       const pauseSeconds = 3;
-      logger.info('Pausing %d seconds to prevent overload of website', pauseSeconds);
+      logger.info(
+        "Pausing %d seconds to prevent overload of website",
+        pauseSeconds,
+      );
       await page.waitForTimeout(pauseSeconds * 1000);
     } while (enableContinuousSearching);
   } finally {
