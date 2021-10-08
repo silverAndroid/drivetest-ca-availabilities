@@ -1,5 +1,5 @@
 import { FunctionalComponent, h } from "preact";
-import style from "./style.css";
+import style from "./style.scss";
 
 const Home: FunctionalComponent = () => {
   return (

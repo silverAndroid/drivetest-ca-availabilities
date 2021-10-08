@@ -52,9 +52,9 @@
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "*.ts": [
-      "eslint --ext .ts './web/src/**/*' -c ./web/package.json --no-eslintrc",
+      "eslint --ext .ts './web/src/**/*'",
       "eslint --ext .ts './cli/**/*' --ignore-pattern '*.js'"
     ],
-    "*.tsx": "eslint --ext .tsx './web/src/**/*' -c ./web/package.json --no-eslintrc"
+    "*.tsx": "eslint --ext .tsx './web/src/**/*'"
   }
 }
