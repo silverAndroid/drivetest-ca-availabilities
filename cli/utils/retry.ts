@@ -6,10 +6,11 @@ import { logger } from "../logger";
  * @param maxRetries if maxRetries is 0, it will keep trying infinitely
  */
 export async function retryIfFail<T>(
+  // eslint-disable-next-line no-unused-vars
   fn: (...args: any[]) => T,
   fnArgs: [Page, ...any[]],
   { useAllArgs = false, maxRetries = 3, waitAfterFailMs = 1000 } = {},
-) {
+): Promise<T> {
   let i = 0;
   const [page, ...args] = fnArgs;
   while (maxRetries !== 0 && i < maxRetries) {

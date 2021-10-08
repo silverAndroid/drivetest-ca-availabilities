@@ -3,7 +3,7 @@ import {
   Response as HTTPResponse,
   Page,
 } from "puppeteer";
-import { logger } from "./cli/logger";
+import { logger } from "./logger";
 
 export const BOOKING_DATES_ID = "booking_dates";
 export const BOOKING_TIMES_ID = "booking_times";
@@ -18,6 +18,7 @@ type SavedResponseId =
 
 const responsePredicates: Record<
   SavedResponseId,
+  // eslint-disable-next-line no-unused-vars
   string | ((res: HTTPResponse) => boolean)
 > = {
   [BOOKING_DATES_ID]: (res) =>
@@ -32,14 +33,17 @@ const savedResponses: Partial<Record<SavedResponseId, Promise<HTTPResponse>>> =
 
 export function listenForResponses(
   page: Page,
+  // eslint-disable-next-line no-unused-vars
   shouldSaveResponse: (req: HTTPRequest) => SavedResponseId | null,
-) {
+): void {
   page.on("request", (req: HTTPRequest | undefined) => {
     if (req) {
       const savedId = shouldSaveResponse(req);
       if (savedId) {
         logger.debug("waiting for response %s", savedId);
+        // eslint-disable-next-line no-async-promise-executor
         savedResponses[savedId] = new Promise(async (resolve) => {
+          // eslint-disable-next-line no-constant-condition
           while (true) {
             const res = req.response();
             if (res) {

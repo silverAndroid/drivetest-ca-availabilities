@@ -40,6 +40,7 @@ async function checkCliUpdate() {
   const res = await fetch(
     "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest",
   );
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: currentVersion } = require("./package.json");
   const newVersion = res.url.split("/").slice(-1)[0];
 
@@ -53,7 +54,7 @@ async function checkCliUpdate() {
   return null;
 }
 
-export async function main(options: CliOptions) {
+export async function main(options: CliOptions): Promise<void> {
   logger.info("Checking for updates...");
   const update = await checkCliUpdate();
   if (update) {
@@ -81,6 +82,7 @@ export async function main(options: CliOptions) {
   } else {
     logger.info(
       "No new updates found, current version %s",
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require("./package.json").version,
     );
   }
@@ -142,14 +144,14 @@ export async function main(options: CliOptions) {
     if (availableCenters.length === 0) {
       logger.error("No Drivetest centers that match your preferences");
       return;
-    } else {
-      logger.info(
-        "Going to be searching these DriveTest centers: %s",
-        availableCenters
-          .map(({ name, distance }) => `${name} (${distance.toFixed(2)} km)`)
-          .join(", "),
-      );
     }
+
+    logger.info(
+      "Going to be searching these DriveTest centers: %s",
+      availableCenters
+        .map(({ name, distance }) => `${name} (${distance.toFixed(2)} km)`)
+        .join(", "),
+    );
 
     const foundResults: {
       type: Result.FOUND;

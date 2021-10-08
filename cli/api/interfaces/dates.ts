@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 export interface BookingDateResponse {
   availableBookingDates: AvailableBookingDate[];
   valid: boolean;

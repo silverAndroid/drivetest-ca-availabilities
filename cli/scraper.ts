@@ -1,5 +1,5 @@
+/* eslint-disable prefer-arrow-callback */
 import { Page, Response } from "puppeteer";
-import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
 import {
@@ -19,7 +19,7 @@ import {
   BookingDateError,
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
-import { logger } from "./cli/logger";
+import { logger } from "./logger";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
@@ -28,12 +28,12 @@ import {
   waitForResponse,
 } from "./responseListener";
 
-export async function waitToEnterBookingPage(page: Page) {
+export async function waitToEnterBookingPage(page: Page): Promise<void> {
   logger.info("Please pass the HCaptcha to continue...");
 
   try {
     await retryIfFail(
-      async function passCaptcha(page: Page) {
+      async function passCaptcha(page: Page): Promise<void> {
         await page.waitForNavigation();
 
         const { getInnerText } = await import("./evaluate");
@@ -68,7 +68,7 @@ export async function login(
   email: string,
   licenseNumber: string,
   licenseExpiry: string,
-) {
+): Promise<void> {
   const EMAIL_SELECTOR = "#emailAddress";
   const CONFIRM_EMAIL_SELECTOR = "#confirmEmailAddress";
   const LICENSE_NUMBER_SELECTOR = "#licenceNumber";
@@ -118,8 +118,11 @@ export async function login(
   );
 }
 
-export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
-  const LICENSE_BTN_SELECTOR = "#lic_" + licenseType;
+export async function selectLicenseType(
+  page: Page,
+  licenseType: LicenseClass,
+): Promise<void> {
+  const LICENSE_BTN_SELECTOR = `#lic_${licenseType}`;
   const CONTINUE_BTN_SELECTOR =
     "#booking-licence > div > form > div > div.directive_wrapper.ng-isolate-scope > button";
 
@@ -156,7 +159,7 @@ export async function getDriveTestCenters(
   searchRadius: number,
   currentLocation: Coordinates,
   selectedLicenseClass: LicenseClass,
-) {
+): Promise<DriveTestCenterLocation[]> {
   const response = await waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;

@@ -23,6 +23,10 @@
     "@types/puppeteer": "^5.4.4",
     "@types/semver": "^7.3.5",
     "@types/tough-cookie": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "eslint": "^7.32.0",
+    "eslint-config-preact": "^1.1.4",
     "husky": "^7.0.1",
     "lint-staged": "^11.1.2",
     "pkg": "^5.1.0",
@@ -46,6 +50,11 @@
     "semver": "^7.3.5"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*": "prettier --write --ignore-unknown",
+    "*.ts": [
+      "eslint --ext .ts './web/src/**/*' -c ./web/package.json --no-eslintrc",
+      "eslint --ext .ts './cli/**/*' --ignore-pattern '*.js'"
+    ],
+    "*.tsx": "eslint --ext .tsx './web/src/**/*' -c ./web/package.json --no-eslintrc"
   }
 }
