@@ -3,7 +3,7 @@ import {
   Response as HTTPResponse,
   Page,
 } from "puppeteer";
-import { logger } from "./logger";
+import { logger } from "./cli/logger";
 
 export const BOOKING_DATES_ID = "booking_dates";
 export const BOOKING_TIMES_ID = "booking_times";

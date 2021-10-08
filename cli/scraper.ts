@@ -19,7 +19,7 @@ import {
   BookingDateError,
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
-import { logger } from "./logger";
+import { logger } from "./cli/logger";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
