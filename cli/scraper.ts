@@ -1,14 +1,7 @@
 /* eslint-disable prefer-arrow-callback */
-import { Page, Response } from "puppeteer";
 import { RateLimit } from "async-sema";
+import { Page, Response } from "puppeteer";
 
-import {
-  Coordinates,
-  distanceTo,
-  isInLicenseRange,
-  retryIfFail,
-  Unit,
-} from "./utils";
 import {
   LicenseClass,
   DriveTestCenterLocationsResponse,
@@ -18,7 +11,6 @@ import {
   BookingTimeResponse,
   BookingDateError,
 } from "./api/interfaces";
-import { Result } from "./utils/enums";
 import { logger } from "./logger";
 import {
   BOOKING_DATES_ID,
@@ -27,6 +19,14 @@ import {
   LOCATIONS_ID,
   waitForResponse,
 } from "./responseListener";
+import {
+  Coordinates,
+  distanceTo,
+  isInLicenseRange,
+  Result,
+  retryIfFail,
+  Unit,
+} from "./utils";
 
 export async function waitToEnterBookingPage(page: Page): Promise<void> {
   logger.info("Please pass the HCaptcha to continue...");

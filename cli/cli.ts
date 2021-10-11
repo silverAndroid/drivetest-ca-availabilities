@@ -1,10 +1,11 @@
-import { Command } from "commander";
 import { readFile } from "fs";
 import os from "os";
 import { promisify } from "util";
 
-import { CliOptions, main } from "./main";
+import { Command } from "commander";
+
 import { logger } from "./logger";
+import { CliOptions, main } from "./main";
 import {
   parseCommanderInt,
   parseLocation,

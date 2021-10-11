@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+// eslint-disable-next-line import/default
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
 
@@ -21,8 +22,7 @@ import {
   waitToEnterBookingPage,
   getDriveTestCenters,
 } from "./scraper";
-import { Coordinates, Result } from "./utils";
-import { sleep } from "./utils/sleep";
+import { Coordinates, Result, sleep } from "./utils";
 
 export interface CliOptions {
   email: string;

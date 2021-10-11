@@ -1,10 +1,11 @@
-import { Command } from "commander";
 import os from "os";
 import * as path from "path";
+
+import { Command } from "commander";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
 
-import { CliOptions, main } from "./main";
 import { logger } from "./logger";
+import { CliOptions, main } from "./main";
 import {
   parseCommanderInt,
   parseLocation,
