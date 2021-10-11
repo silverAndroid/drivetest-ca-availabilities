@@ -1,7 +1,8 @@
+import Button from "@mui/material/Button";
 import { FunctionalComponent, h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
-import style from "./style.css";
+import style from "./style.scss";
 
 interface Props {
   user: string;
@@ -35,7 +36,10 @@ const Profile: FunctionalComponent<Props> = (props: Props) => {
       <div>Current time: {new Date(time).toLocaleString()}</div>
 
       <p>
-        <button onClick={increment}>Click Me</button> Clicked {count} times.
+        <Button onClick={increment} variant="contained">
+          Click Me
+        </Button>{" "}
+        Clicked {count} times.
       </p>
     </div>
   );
