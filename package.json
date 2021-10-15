@@ -8,25 +8,14 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "node cli.js",
-    "build": "tsc",
-    "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
-    "package:dev": "yarn build && yarn package",
-    "prepare": "husky install"
-  },
-  "devDependencies": {
-    "@types/inquirer": "^7.3.3",
-    "@types/node-fetch": "^2.5.8",
-    "@types/pino": "^6.3.8",
-    "@types/pino-multi-stream": "^5.1.1",
-    "@types/puppeteer": "^5.4.4",
-    "@types/semver": "^7.3.5",
-    "@types/tough-cookie": "^4.0.0",
-    "husky": "^7.0.1",
-    "lint-staged": "^11.1.2",
-    "pkg": "^5.1.0",
-    "prettier": "2.3.2",
-    "typescript": "^4.1.3"
+    "start:cli": "node cli.js",
+    "build:cli": "tsc",
+    "package:cli": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
+    "package:cli:dev": "yarn build && yarn package",
+    "prepare": "husky install",
+    "start": "nx serve",
+    "build": "nx build",
+    "test": "nx test"
   },
   "dependencies": {
     "async-sema": "^3.1.0",
@@ -42,6 +31,24 @@
     "puppeteer-extra": "^3.1.18",
     "puppeteer-extra-plugin-stealth": "^2.7.8",
     "semver": "^7.3.5"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^7.3.3",
+    "@types/node-fetch": "^2.5.8",
+    "@types/pino": "^6.3.8",
+    "@types/pino-multi-stream": "^5.1.1",
+    "@types/puppeteer": "^5.4.4",
+    "@types/semver": "^7.3.5",
+    "@types/tough-cookie": "^4.0.0",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.2",
+    "pkg": "^5.1.0",
+    "prettier": "2.3.2",
+    "@nrwl/tao": "12.10.0",
+    "@nrwl/cli": "12.10.0",
+    "@nrwl/workspace": "12.10.0",
+    "@types/node": "14.14.33",
+    "typescript": "~4.3.5"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
