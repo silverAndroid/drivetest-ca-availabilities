@@ -10,7 +10,12 @@
     "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "~components/*": ["src/components/*"]
+    }
   },
   "files": [],
   "include": [],
