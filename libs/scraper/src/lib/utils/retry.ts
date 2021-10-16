@@ -7,10 +7,10 @@ import { logger } from "~drivetest-ca-availabilities/logger";
  * @param maxRetries if maxRetries is 0, it will keep trying infinitely
  */
 export async function retryIfFail<T>(
-  fn: (...args: any[]) => T,
-  fnArgs: [Page, ...any[]],
+  fn: (...args: unknown[]) => T,
+  fnArgs: [Page, ...unknown[]],
   { useAllArgs = false, maxRetries = 3, waitAfterFailMs = 1000 } = {},
-) {
+): Promise<T> {
   let i = 0;
   const [page, ...args] = fnArgs;
   while (maxRetries !== 0 && i < maxRetries) {

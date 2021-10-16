@@ -28,7 +28,7 @@ import {
 } from "./utils";
 import { Result } from "./utils/enums";
 
-export async function waitToEnterBookingPage(page: Page) {
+export async function waitToEnterBookingPage(page: Page): Promise<void> {
   logger.info("Please pass the HCaptcha to continue...");
 
   try {
@@ -68,7 +68,7 @@ export async function login(
   email: string,
   licenseNumber: string,
   licenseExpiry: string,
-) {
+): Promise<void> {
   const EMAIL_SELECTOR = "#emailAddress";
   const CONFIRM_EMAIL_SELECTOR = "#confirmEmailAddress";
   const LICENSE_NUMBER_SELECTOR = "#licenceNumber";
@@ -118,7 +118,10 @@ export async function login(
   );
 }
 
-export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
+export async function selectLicenseType(
+  page: Page,
+  licenseType: LicenseClass,
+): Promise<void> {
   const LICENSE_BTN_SELECTOR = "#lic_" + licenseType;
   const CONTINUE_BTN_SELECTOR =
     "#booking-licence > div > form > div > div.directive_wrapper.ng-isolate-scope > button";
@@ -156,7 +159,7 @@ export async function getDriveTestCenters(
   searchRadius: number,
   currentLocation: Coordinates,
   selectedLicenseClass: LicenseClass,
-) {
+): Promise<DriveTestCenterLocation[]> {
   const response = await waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
@@ -323,7 +326,10 @@ async function* findAvailableDates(
         const CALENDAR_CONTINUE_BTN_SELECTOR = "#calendarSubmit > button";
 
         const availableBookingTimes = await retryIfFail(
-          async function selectDate(dateSelector, calendarContinueBtnSelector) {
+          async function selectDate(
+            dateSelector: string,
+            calendarContinueBtnSelector: string,
+          ) {
             await rateLimiter();
             logger.debug("clicking %s", dateSelector);
             await page.click(dateSelector);

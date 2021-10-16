@@ -34,7 +34,7 @@ const savedResponses: Partial<Record<SavedResponseId, Promise<HTTPResponse>>> =
 export function listenForResponses(
   page: Page,
   shouldSaveResponse: (req: HTTPRequest) => SavedResponseId | null,
-) {
+): void {
   page.on("request", (req: HTTPRequest | undefined) => {
     if (req) {
       const savedId = shouldSaveResponse(req);

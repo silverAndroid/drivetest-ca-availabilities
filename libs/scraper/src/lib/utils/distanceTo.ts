@@ -13,7 +13,7 @@ export function distanceTo(
   { latitude: lat1, longitude: lon1 }: Coordinates,
   { latitude: lat2, longitude: lon2 }: Coordinates,
   unit: Unit,
-) {
+): number {
   const rlat1 = (Math.PI * lat1) / 180;
   const rlat2 = (Math.PI * lat2) / 180;
   const theta = lon1 - lon2;

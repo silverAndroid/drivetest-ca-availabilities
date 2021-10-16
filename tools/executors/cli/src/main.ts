@@ -60,7 +60,7 @@ async function checkCliUpdate() {
   return null;
 }
 
-export async function main(options: CliOptions) {
+export async function main(options: CliOptions): Promise<void> {
   logger.info("Checking for updates...");
   const update = await checkCliUpdate();
   if (update) {

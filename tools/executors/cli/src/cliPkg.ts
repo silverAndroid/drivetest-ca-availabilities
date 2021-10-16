@@ -1,7 +1,7 @@
 import * as os from "os";
 import * as path from "path";
 
-import { ExecutorContext } from "@nrwl/devkit";
+import { Executor } from "@nrwl/devkit";
 import { Command } from "commander";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
@@ -14,10 +14,7 @@ import {
 
 import { CliOptions, main } from "./main";
 
-export default async function cliPkgExecutor(
-  options: CliOptions,
-  context: ExecutorContext,
-) {
+const cliPkgExecutor: Executor = async (options: CliOptions) => {
   try {
     if (!options.chromiumPath) {
       if (os.arch() === "arm64") {
@@ -36,7 +33,8 @@ export default async function cliPkgExecutor(
     logger.error(error);
     return { success: false };
   }
-}
+};
+export default cliPkgExecutor;
 
 const program = new Command();
 type ProcessWithPkg = NodeJS.Process & { pkg?: unknown };

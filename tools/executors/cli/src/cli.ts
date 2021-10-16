@@ -1,15 +1,12 @@
 import os from "os";
 
-import { ExecutorContext } from "@nrwl/devkit";
+import { Executor } from "@nrwl/devkit";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
 
 import { CliOptions, main } from "./main";
 
-export default async function cliExecutor(
-  options: CliOptions,
-  context: ExecutorContext,
-) {
+const cliExecutor: Executor = async (options: CliOptions) => {
   try {
     logger.info(os.arch());
     if (os.arch() === "arm64") {
@@ -27,4 +24,5 @@ export default async function cliExecutor(
     logger.error(error);
     return { success: false };
   }
-}
+};
+export default cliExecutor;

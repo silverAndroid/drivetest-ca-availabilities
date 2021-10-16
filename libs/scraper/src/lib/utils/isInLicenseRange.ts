@@ -9,7 +9,7 @@ function generateCharArray(char1: string, char2: string) {
 export function isInLicenseRange(
   licenseRange: string,
   selectedLicense: string,
-) {
+): boolean {
   const rangeArr = licenseRange.split("-");
   if (rangeArr.length === 2) {
     const [char1, char2] = rangeArr;
