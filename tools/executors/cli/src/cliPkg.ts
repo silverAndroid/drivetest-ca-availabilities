@@ -1,16 +1,18 @@
-import { ExecutorContext } from "@nrwl/devkit";
 import * as os from "os";
 import * as path from "path";
 
-import { CliOptions, main } from "./main";
-import { logger } from "~drivetest-ca-availabilities/logger";
+import { ExecutorContext } from "@nrwl/devkit";
 import { Command } from "commander";
+
+import { logger } from "~drivetest-ca-availabilities/logger";
 import {
   parseCommanderInt,
   parseLocation,
   verifyLicenseNumber,
   verifyDateFormat,
 } from "~drivetest-ca-availabilities/scraper";
+
+import { CliOptions, main } from "./main";
 
 export default async function cliPkgExecutor(
   options: CliOptions,

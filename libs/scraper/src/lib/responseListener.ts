@@ -3,6 +3,7 @@ import {
   Response as HTTPResponse,
   Page,
 } from "puppeteer";
+
 import { logger } from "~drivetest-ca-availabilities/logger";
 
 export const BOOKING_DATES_ID = "booking_dates";

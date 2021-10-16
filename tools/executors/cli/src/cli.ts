@@ -1,5 +1,7 @@
-import { ExecutorContext } from "@nrwl/devkit";
 import os from "os";
+
+import { ExecutorContext } from "@nrwl/devkit";
+
 import { logger } from "~drivetest-ca-availabilities/logger";
 
 import { CliOptions, main } from "./main";

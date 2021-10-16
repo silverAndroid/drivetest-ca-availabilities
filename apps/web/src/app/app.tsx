@@ -1,8 +1,9 @@
-import { h, FunctionalComponent } from "preact";
 import { Button } from "@mui/material";
+import { h, FunctionalComponent } from "preact";
+
+import { Header } from "~components/header";
 
 import styles from "./app.module.scss";
-import { Header } from "~components/header";
 
 export const App: FunctionalComponent = () => {
   return (

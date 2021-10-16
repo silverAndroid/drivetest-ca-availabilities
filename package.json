@@ -17,7 +17,8 @@
     "prepare": "husky install",
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx test",
+    "lint": "nx run-many --target=lint --all"
   },
   "dependencies": {
     "@emotion/react": "^11.4.1",
@@ -104,7 +105,7 @@
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "*.{ts,tsx,js}": [
-      "nx run-many --target=lint --all"
+      "yarn lint"
     ]
   }
 }

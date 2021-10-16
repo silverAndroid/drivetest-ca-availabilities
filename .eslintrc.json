@@ -23,8 +23,35 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nrwl/nx/typescript"],
-      "rules": {}
+      "extends": [
+        "plugin:@nrwl/nx/typescript",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
+      ],
+      "rules": {
+        "import/order": [
+          "error",
+          {
+            "pathGroups": [
+              { "pattern": "~*/**", "group": "internal", "position": "before" }
+            ],
+            "groups": [
+              "builtin",
+              "external",
+              "unknown",
+              ["internal", "sibling", "parent"],
+              "index",
+              "object"
+            ],
+            "alphabetize": {
+              "order": "asc",
+              "caseInsensitive": true
+            },
+            "newlines-between": "always"
+          }
+        ],
+        "import/no-unresolved": ["error", { "ignore": ["^~"] }]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
