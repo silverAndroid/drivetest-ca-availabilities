@@ -29,6 +29,9 @@
     "pino": "^6.11.3",
     "pino-multi-stream": "^5.3.0",
     "pino-pretty": "^4.7.1",
+    "preact": "^10.5.15",
+    "preact-render-to-string": "^5.1.19",
+    "preact-router": "^3.2.1",
     "progress": "^2.0.3",
     "puppeteer": "5",
     "puppeteer-extra": "^3.1.18",
@@ -40,6 +43,7 @@
     "tslib": "^2.0.0"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.14.9",
     "@nrwl/cli": "12.10.0",
     "@nrwl/cypress": "12.10.0",
     "@nrwl/eslint-plugin-nx": "12.10.0",
@@ -68,6 +72,7 @@
     "babel-jest": "27.2.3",
     "cypress": "^8.3.0",
     "eslint": "7.22.0",
+    "eslint-config-preact": "^1.1.4",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "2.22.1",

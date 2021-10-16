@@ -11,6 +11,12 @@
       "rules": {}
     },
     {
+      "files": ["*.tsx"],
+      "rules": {},
+      "parser": "@typescript-eslint/parser",
+      "extends": ["preact"]
+    },
+    {
       "files": ["*.js", "*.jsx"],
       "rules": {}
     }

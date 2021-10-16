@@ -1,9 +1,11 @@
+import { h, FunctionalComponent } from "preact";
+
 import styles from "./app.module.scss";
 
 import { ReactComponent as Logo } from "./logo.svg";
 import star from "./star.svg";
 
-export function App() {
+export const App: FunctionalComponent = () => {
   return (
     <div className={styles.app}>
       <header className="flex">
@@ -96,6 +98,6 @@ nx affected:e2e
       </main>
     </div>
   );
-}
+};
 
 export default App;
