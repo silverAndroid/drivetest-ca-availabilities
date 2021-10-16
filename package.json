@@ -8,10 +8,10 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start:cli": "node cli.js",
-    "build:cli": "tsc",
-    "package:cli": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
-    "package:cli:dev": "yarn build && yarn package",
+    "start:cli": "nx serve cli",
+    "build:cli": "nx build cli",
+    "package:cli": "pkg -c ./pkg.config.json -o drivetest-availabilities ./dist/tools/executors/cli/main.js",
+    "package:cli:dev": "yarn build:cli && yarn package:cli",
     "prepare": "husky install",
     "start": "nx serve",
     "build": "nx build",
@@ -30,27 +30,42 @@
     "puppeteer": "5",
     "puppeteer-extra": "^3.1.18",
     "puppeteer-extra-plugin-stealth": "^2.7.8",
-    "semver": "^7.3.5"
+    "semver": "^7.3.5",
+    "tslib": "^2.0.0"
   },
   "devDependencies": {
+    "@nrwl/cli": "12.10.0",
+    "@nrwl/eslint-plugin-nx": "12.10.0",
+    "@nrwl/jest": "12.10.0",
+    "@nrwl/linter": "12.10.0",
+    "@nrwl/node": "^12.10.0",
+    "@nrwl/tao": "12.10.0",
+    "@nrwl/workspace": "12.10.0",
     "@types/inquirer": "^7.3.3",
+    "@types/jest": "27.0.2",
+    "@types/node": "14.14.33",
     "@types/node-fetch": "^2.5.8",
     "@types/pino": "^6.3.8",
     "@types/pino-multi-stream": "^5.1.1",
     "@types/puppeteer": "^5.4.4",
     "@types/semver": "^7.3.5",
     "@types/tough-cookie": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "~4.31.1",
+    "@typescript-eslint/parser": "~4.31.1",
+    "eslint": "7.22.0",
+    "eslint-config-prettier": "8.1.0",
     "husky": "^7.0.1",
+    "jest": "27.2.3",
     "lint-staged": "^11.1.2",
     "pkg": "^5.1.0",
     "prettier": "2.3.2",
-    "@nrwl/tao": "12.10.0",
-    "@nrwl/cli": "12.10.0",
-    "@nrwl/workspace": "12.10.0",
-    "@types/node": "14.14.33",
+    "ts-jest": "27.0.5",
     "typescript": "~4.3.5"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*": "prettier --write --ignore-unknown",
+    "*.{ts,tsx,js}": [
+      "nx run-many --target=lint --all"
+    ]
   }
 }

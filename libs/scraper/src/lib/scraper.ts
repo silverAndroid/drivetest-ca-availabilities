@@ -1,5 +1,4 @@
 import { Page, Response } from "puppeteer";
-import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
 import {
@@ -19,7 +18,7 @@ import {
   BookingDateError,
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
-import { logger } from "./logger";
+import { logger } from "~drivetest-ca-availabilities/logger";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,

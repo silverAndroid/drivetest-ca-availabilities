@@ -40,6 +40,8 @@ Thumbs.db
 
 config.json
 node_modules
-*.js
+tools/executors/**/*.js
+!*.config.js
 .local-chromium/
 drivetest-availabilities*
+drivetest-*.log

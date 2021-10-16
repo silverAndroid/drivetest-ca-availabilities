@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "radius": {
+      "type": "number",
+      "description": "search radius (in kilometers) from where you are",
+      "default": 20
+    },
+    "months": {
+      "type": "number",
+      "description": "number of months to look ahead",
+      "default": 6
+    },
+    "enableContinuousSearching": {
+      "type": "boolean",
+      "default": false
+    },
+    "location": {
+      "type": "string",
+      "pattern": "^((\\-?|\\+?)?\\d+(\\.\\d+)?),\\s*((\\-?|\\+?)?\\d+(\\.\\d+)?)$",
+      "description": "your current location expressed in \"latitude,longitude\" (eg. 43.6426445,-79.3871645)"
+    },
+    "licenseType": {
+      "type": "string",
+      "enum": [
+        "G2",
+        "G",
+        "M2",
+        "M",
+        "LM2",
+        "LM",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "Z"
+      ],
+      "description": "exam for license to search for"
+    },
+    "licenseNumber": {
+      "type": "string",
+      "pattern": "[A-Z][0-9]{4}-[0-9]{5}-[0-9]{5}",
+      "description": "license number to log in with"
+    },
+    "licenseExpiry": {
+      "type": "string",
+      "format": "date",
+      "description": "expiry date for license expressed in YYYY/MM/DD to log in with"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "email to log in with"
+    },
+    "chromiumPath": {
+      "type": "string",
+      "description": "Path to Chromium-based browser executable, make sure not to use the browser you regularly use (HCaptcha may flag it as a bot and prevent you from accessing the site normally). If a value is not given to this option, Chromium will be downloaded to this folder."
+    }
+  },
+  "required": [
+    "location",
+    "licenseType",
+    "licenseNumber",
+    "licenseExpiry",
+    "email"
+  ]
+}

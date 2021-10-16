@@ -3,7 +3,7 @@ import {
   Response as HTTPResponse,
   Page,
 } from "puppeteer";
-import { logger } from "./logger";
+import { logger } from "~drivetest-ca-availabilities/logger";
 
 export const BOOKING_DATES_ID = "booking_dates";
 export const BOOKING_TIMES_ID = "booking_times";
@@ -39,7 +39,9 @@ export function listenForResponses(
       const savedId = shouldSaveResponse(req);
       if (savedId) {
         logger.debug("waiting for response %s", savedId);
+        // eslint-disable-next-line no-async-promise-executor
         savedResponses[savedId] = new Promise(async (resolve) => {
+          // eslint-disable-next-line no-constant-condition
           while (true) {
             const res = req.response();
             if (res) {
@@ -71,7 +73,7 @@ export async function waitForResponse(
       logger.trace("failed to wait for response");
       return getSavedResponse();
     });
-  const response = (await Promise.race([waitingResponse, getSavedResponse()]))!;
+  const response = await Promise.race([waitingResponse, getSavedResponse()]);
   logger.trace("received response %s", responseId);
   return response;
 }

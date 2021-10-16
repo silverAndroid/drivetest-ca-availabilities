@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-# Ignore artifacts:
-build
-coverage
-*.js
-*.json
-=======
 # Add files here to ignore them from prettier formatting
 
 /dist
 /coverage
->>>>>>> 1814e8e (feat: added nx for monorepo support)
+/build
+
+*.js

@@ -5,6 +5,7 @@
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -14,7 +15,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "~drivetest-ca-availabilities/logger": ["libs/logger/src/index.ts"],
+      "~drivetest-ca-availabilities/scraper": ["libs/scraper/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

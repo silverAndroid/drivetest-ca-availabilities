@@ -5,24 +5,23 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
 
-import { LicenseClass } from "./api/interfaces";
-import { logger } from "./logger";
+import { logger } from "~drivetest-ca-availabilities/logger";
 import {
+  LicenseClass,
   listenForResponses,
   ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   LOCATIONS_ID,
-} from "./responseListener";
-import {
   login,
   selectLicenseType,
   findAvailabilities,
   waitToEnterBookingPage,
   getDriveTestCenters,
-} from "./scraper";
-import { Coordinates, Result } from "./utils";
-import { sleep } from "./utils/sleep";
+  Coordinates,
+  Result,
+  sleep,
+} from "~drivetest-ca-availabilities/scraper";
 
 export interface CliOptions {
   email: string;
@@ -36,11 +35,19 @@ export interface CliOptions {
   enableContinuousSearching: boolean;
 }
 
+function getVersion() {
+  return (
+    process.env.npm_package_version ||
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require("../../../../package.json").version
+  );
+}
+
 async function checkCliUpdate() {
   const res = await fetch(
     "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest",
   );
-  const { version: currentVersion } = require("./package.json");
+  const currentVersion = getVersion();
   const newVersion = res.url.split("/").slice(-1)[0];
 
   if (semver.lt(currentVersion, newVersion)) {
@@ -79,10 +86,7 @@ export async function main(options: CliOptions) {
       return;
     }
   } else {
-    logger.info(
-      "No new updates found, current version %s",
-      require("./package.json").version,
-    );
+    logger.info("No new updates found, current version %s", getVersion());
   }
 
   const {

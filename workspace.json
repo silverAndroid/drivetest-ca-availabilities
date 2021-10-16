@@ -1,7 +1,98 @@
 {
   "version": 2,
-  "projects": {},
+  "projects": {
+    "cli": {
+      "root": "tools/executors/cli",
+      "sourceRoot": "tools/executors/cli/src",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/tools/executors/cli",
+            "main": "tools/executors/cli/src/cli.ts",
+            "tsConfig": "tools/tsconfig.json"
+          },
+          "configurations": {
+            "pkg": {
+              "optimization": true,
+              "extractLicenses": true,
+              "inspect": false,
+              "main": "tools/executors/cli/src/cliPkg.ts"
+            }
+          }
+        },
+        "serve": {
+          "executor": "./tools/executors/cli:cli",
+          "options": {
+            "buildTarget": "cli:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["tools/executors/cli/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/tools/executors/cli"],
+          "options": {
+            "jestConfig": "tools/executors/cli/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "logger": {
+      "root": "libs/logger",
+      "sourceRoot": "libs/logger/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/logger/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/logger"],
+          "options": {
+            "jestConfig": "libs/logger/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "scraper": {
+      "root": "libs/scraper",
+      "sourceRoot": "libs/scraper/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/scraper/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/scraper"],
+          "options": {
+            "jestConfig": "libs/scraper/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    }
+  },
   "cli": {
-    "defaultCollection": "@nrwl/workspace"
-  }
+    "defaultCollection": "@nrwl/node"
+  },
+  "defaultProject": "cli"
 }
