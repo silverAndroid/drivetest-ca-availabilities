@@ -1,0 +1,25 @@
+.inputs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: 0.625rem;
+  row-gap: 0.625rem;
+}
+
+.connectedInputs {
+  margin-top: 0.5rem;
+
+  :global(.MuiFormControl-root) {
+    &:not(:first-of-type) > :global(.MuiInputBase-root) {
+      border-top-left-radius: 0;
+    }
+
+    &:not(:last-of-type) > :global(.MuiInputBase-root) {
+      border-top-right-radius: 0;
+    }
+  }
+}
+
+.licenseType {
+  width: 10rem;
+}

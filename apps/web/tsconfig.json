@@ -11,10 +11,14 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "~components/*": ["src/components/*"]
+      "~drivetest-ca-availabilities/scraper/*": [
+        "../../libs/scraper/src/lib/*"
+      ],
+      "~components/*": ["src/components/*"],
+      "~pages/*": ["src/pages/*"],
+      "~utilities/*": ["src/utilities/*"]
     }
   },
   "files": [],

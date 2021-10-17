@@ -12,3 +12,7 @@ export interface ScraperOptions {
   chromiumPath: string;
   enableContinuousSearching: boolean;
 }
+
+export const LICENSE_NUMBER_FORMAT = /[A-Z][0-9]{4}-[0-9]{5}-[0-9]{5}/;
+export const LICENSE_EXPIRY_FORMAT =
+  /^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$/;

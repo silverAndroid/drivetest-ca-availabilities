@@ -1,6 +1,7 @@
 import { InvalidOptionArgumentError } from "commander";
 
 import { Coordinates } from "./distanceTo";
+import { LICENSE_EXPIRY_FORMAT, LICENSE_NUMBER_FORMAT } from "./scraperOptions";
 
 export function parseCommanderInt(
   value: string,
@@ -15,7 +16,7 @@ export function parseCommanderInt(
 }
 
 export function verifyLicenseNumber(licenseNumber: string): string {
-  if (!/[A-Z][0-9]{4}-[0-9]{5}-[0-9]{5}/.test(licenseNumber)) {
+  if (!LICENSE_NUMBER_FORMAT.test(licenseNumber)) {
     throw new InvalidOptionArgumentError(
       "license number must match format found here: https://www.services.gov.on.ca/wps85/wcm/connect/s2i/34491094-6a43-4d56-a152-317816e236a5/2/qvkgtrfx4296227867638271464.png?MOD=AJPERES&CVID=",
     );
@@ -25,7 +26,7 @@ export function verifyLicenseNumber(licenseNumber: string): string {
 }
 
 export function verifyDateFormat(date: string): string {
-  if (!/^\d{4}\/(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])$/.test(date)) {
+  if (!LICENSE_EXPIRY_FORMAT.test(date)) {
     throw new InvalidOptionArgumentError("date must follow format YYYY/MM/DD!");
   }
   return date;

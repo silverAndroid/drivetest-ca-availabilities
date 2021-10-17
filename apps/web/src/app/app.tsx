@@ -1,18 +1,25 @@
-import { Button } from "@mui/material";
+import { LocalizationProvider } from "@mui/lab";
+import LuxonAdapter from "@mui/lab/AdapterLuxon";
 import { h, FunctionalComponent } from "preact";
+import { Route, Router } from "preact-router";
 
 import { Header } from "~components/header";
+import Options from "~pages/options";
 
 import styles from "./app.module.scss";
 
 export const App: FunctionalComponent = () => {
   return (
-    <div className={styles.app}>
-      <Header />
-      <main>
-        <Button>Hello</Button>
-      </main>
-    </div>
+    <LocalizationProvider dateAdapter={LuxonAdapter}>
+      <div class={styles.app}>
+        <Header />
+        <main>
+          <Router>
+            <Route path="/" component={Options} />
+          </Router>
+        </main>
+      </div>
+    </LocalizationProvider>
   );
 };
 
