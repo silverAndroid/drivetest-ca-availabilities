@@ -10,11 +10,12 @@ import {
   parseLocation,
   verifyLicenseNumber,
   verifyDateFormat,
+  ScraperOptions,
 } from "~drivetest-ca-availabilities/scraper";
 
-import { CliOptions, main } from "./main";
+import { main } from "./main";
 
-const cliPkgExecutor: Executor = async (options: CliOptions) => {
+const cliPkgExecutor: Executor = async (options: ScraperOptions) => {
   try {
     if (!options.chromiumPath) {
       if (os.arch() === "arm64") {
@@ -118,7 +119,7 @@ async function setupCliInterface() {
 
   program.parse();
 
-  return program.opts() as CliOptions;
+  return program.opts() as ScraperOptions;
 }
 
 async function downloadChrome() {

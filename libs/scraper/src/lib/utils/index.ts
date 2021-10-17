@@ -4,3 +4,4 @@ export * from "./enums";
 export * from "./retry";
 export * from "./cliValidators";
 export * from "./sleep";
+export * from "./scraperOptions";

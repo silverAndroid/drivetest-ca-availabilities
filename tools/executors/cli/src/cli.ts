@@ -3,10 +3,11 @@ import os from "os";
 import { Executor } from "@nrwl/devkit";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
+import { ScraperOptions } from "~drivetest-ca-availabilities/scraper";
 
-import { CliOptions, main } from "./main";
+import { main } from "./main";
 
-const cliExecutor: Executor = async (options: CliOptions) => {
+const cliExecutor: Executor = async (options: ScraperOptions) => {
   try {
     logger.info(os.arch());
     if (os.arch() === "arm64") {

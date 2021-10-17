@@ -7,7 +7,6 @@ import semver from "semver";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
 import {
-  LicenseClass,
   listenForResponses,
   ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
@@ -18,22 +17,10 @@ import {
   findAvailabilities,
   waitToEnterBookingPage,
   getDriveTestCenters,
-  Coordinates,
   Result,
   sleep,
+  ScraperOptions,
 } from "~drivetest-ca-availabilities/scraper";
-
-export interface CliOptions {
-  email: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  licenseType: LicenseClass;
-  radius: number;
-  location: Coordinates;
-  months: number;
-  chromiumPath: string;
-  enableContinuousSearching: boolean;
-}
 
 function getVersion() {
   return (
@@ -60,7 +47,7 @@ async function checkCliUpdate() {
   return null;
 }
 
-export async function main(options: CliOptions): Promise<void> {
+export async function main(options: ScraperOptions): Promise<void> {
   logger.info("Checking for updates...");
   const update = await checkCliUpdate();
   if (update) {
