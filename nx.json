@@ -36,6 +36,9 @@
     "scraper": {
       "tags": []
     },
+    "store": {
+      "tags": []
+    },
     "web": {
       "tags": []
     },

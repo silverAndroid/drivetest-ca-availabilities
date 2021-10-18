@@ -16,6 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "~drivetest-ca-availabilities/store": ["libs/store/src/index.ts"],
       "~drivetest-ca-availabilities/logger": ["libs/logger/src/index.ts"],
       "~drivetest-ca-availabilities/scraper/*": ["libs/scraper/src/lib/*"]
     }

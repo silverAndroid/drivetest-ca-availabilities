@@ -21,6 +21,7 @@
     "lint": "nx run-many --target=lint --all"
   },
   "dependencies": {
+    "@datorama/akita": "^6.2.4",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.0.4",
@@ -49,12 +50,14 @@
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "regenerator-runtime": "0.13.7",
+    "rxjs": "^7.4.0",
     "semver": "^7.3.5",
     "tslib": "^2.0.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.14.9",
+    "@datorama/akita-cli": "^6.1.1",
     "@nrwl/cli": "12.10.0",
     "@nrwl/cypress": "12.10.0",
     "@nrwl/eslint-plugin-nx": "12.10.0",
@@ -119,5 +122,10 @@
     "*.tsx": [
       "nx lint web"
     ]
+  },
+  "akitaCli": {
+    "basePath": "./libs/store/src/lib",
+    "template": "ts",
+    "customFolderName": "true"
   }
 }

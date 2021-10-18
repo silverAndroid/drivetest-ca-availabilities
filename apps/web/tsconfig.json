@@ -16,6 +16,7 @@
       "~drivetest-ca-availabilities/scraper/*": [
         "../../libs/scraper/src/lib/*"
       ],
+      "~drivetest-ca-availabilities/store": ["../../libs/store/src"],
       "~components/*": ["src/components/*"],
       "~pages/*": ["src/pages/*"],
       "~utilities/*": ["src/utilities/*"]

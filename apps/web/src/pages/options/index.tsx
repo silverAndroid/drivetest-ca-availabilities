@@ -18,6 +18,7 @@ import {
 import { dialog } from "@tauri-apps/api";
 import { useFormik } from "formik";
 import { FunctionalComponent } from "preact";
+import { route } from "preact-router";
 import { useMemo } from "preact/hooks";
 import * as Yup from "yup";
 
@@ -33,6 +34,7 @@ import {
   LICENSE_EXPIRY_FORMAT,
   LICENSE_NUMBER_FORMAT,
 } from "~drivetest-ca-availabilities/scraper/utils/scraperOptions";
+import { optionsService } from "~drivetest-ca-availabilities/store";
 import { getFormikFieldProps } from "~utilities/getFormikFieldProps";
 
 import style from "./style.module.scss";
@@ -48,7 +50,7 @@ const licenseTypes: LicenseClass[] = [
 ];
 
 const Options: FunctionalComponent = () => {
-  const formik = useFormik<Partial<FormOptions>>({
+  const formik = useFormik<FormOptions>({
     /* eslint-disable no-template-curly-in-string */
     validationSchema: Yup.object({
       radius: Yup.number()
@@ -94,9 +96,22 @@ const Options: FunctionalComponent = () => {
       licenseType: "",
       licenseExpiry: "",
       location: { latitude: undefined, longitude: undefined },
+      chromiumPath: "",
+      email: "",
+      licenseNumber: "",
     },
     onSubmit: (values) => {
-      console.log(values);
+      optionsService.setOptions({
+        ...values,
+        location: {
+          latitude: Number(values.location?.latitude),
+          longitude: Number(values.location?.longitude),
+        },
+        radius: Number(values.radius),
+        months: Number(values.months),
+        licenseType: values.licenseType as LicenseClass,
+      });
+      route("/availabilities");
     },
   });
   const getFieldProps = useMemo(() => getFormikFieldProps(formik), [formik]);
