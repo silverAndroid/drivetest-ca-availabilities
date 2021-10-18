@@ -1,7 +1,13 @@
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { MobileDatePicker } from "@mui/lab";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Button,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   InputAdornment,
   InputLabel,
@@ -9,11 +15,13 @@ import {
   Select,
   TextField,
 } from "@mui/material";
+import { dialog } from "@tauri-apps/api";
 import { useFormik } from "formik";
 import { FunctionalComponent } from "preact";
 import { useMemo } from "preact/hooks";
 import * as Yup from "yup";
 
+import { ClickableInput } from "~components/clickable-input";
 import {
   CommercialLicenseClass,
   LicenseClass,
@@ -203,6 +211,42 @@ const Options: FunctionalComponent = () => {
           />
         </div>
       </div>
+
+      <Accordion className={style.advancedOptions}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          Advanced Options
+        </AccordionSummary>
+        <AccordionDetails>
+          <ClickableInput
+            onClick={() => {
+              dialog
+                .open({
+                  multiple: false,
+                  filters: [{ extensions: ["app"], name: "Apps" }],
+                })
+                .then((chromiumPath) => {
+                  if (typeof chromiumPath === "string") {
+                    formik.setFieldValue("chromiumPath", chromiumPath);
+                  }
+                });
+            }}
+            ButtonProps={{ className: style.chromiumPath }}
+            InputProps={{
+              ...getFieldProps("chromiumPath"),
+              className: style.chromiumPath,
+              label: "Chromium Path",
+              variant: "outlined",
+              InputProps: { readOnly: true },
+            }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox {...getFieldProps("enableContinuousSearching")} />
+            }
+            label="Continuous Searching"
+          />
+        </AccordionDetails>
+      </Accordion>
       <Button onClick={() => formik.submitForm()}>Submit</Button>
     </form>
   );
