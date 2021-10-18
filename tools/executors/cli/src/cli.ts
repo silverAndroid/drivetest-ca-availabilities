@@ -3,7 +3,7 @@ import os from "os";
 import { Executor } from "@nrwl/devkit";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
-import { ScraperOptions } from "~drivetest-ca-availabilities/scraper";
+import { ScraperOptions } from "~drivetest-ca-availabilities/scraper/utils";
 
 import { main } from "./main";
 

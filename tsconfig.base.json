@@ -17,7 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "~drivetest-ca-availabilities/logger": ["libs/logger/src/index.ts"],
-      "~drivetest-ca-availabilities/scraper": ["libs/scraper/src/index.ts"]
+      "~drivetest-ca-availabilities/scraper/*": ["libs/scraper/src/lib/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

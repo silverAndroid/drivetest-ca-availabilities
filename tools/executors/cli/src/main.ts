@@ -7,20 +7,24 @@ import semver from "semver";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
 import {
-  listenForResponses,
-  ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
+  ELIGIBILITY_CHECK_ID,
+  listenForResponses,
   LOCATIONS_ID,
+} from "~drivetest-ca-availabilities/scraper/responseListener";
+import {
+  findAvailabilities,
+  getDriveTestCenters,
   login,
   selectLicenseType,
-  findAvailabilities,
   waitToEnterBookingPage,
-  getDriveTestCenters,
-  Result,
-  sleep,
+} from "~drivetest-ca-availabilities/scraper/scraper";
+import {
   ScraperOptions,
-} from "~drivetest-ca-availabilities/scraper";
+  sleep,
+  Result,
+} from "~drivetest-ca-availabilities/scraper/utils";
 
 function getVersion() {
   return (

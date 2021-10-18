@@ -6,12 +6,12 @@ import { Command } from "commander";
 
 import { logger } from "~drivetest-ca-availabilities/logger";
 import {
+  ScraperOptions,
   parseCommanderInt,
   parseLocation,
   verifyLicenseNumber,
   verifyDateFormat,
-  ScraperOptions,
-} from "~drivetest-ca-availabilities/scraper";
+} from "~drivetest-ca-availabilities/scraper/utils";
 
 import { main } from "./main";
 
