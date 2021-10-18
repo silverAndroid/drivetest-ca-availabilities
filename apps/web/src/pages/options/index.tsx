@@ -37,8 +37,9 @@ import { getFormikFieldProps } from "~utilities/getFormikFieldProps";
 
 import style from "./style.module.scss";
 
-interface FormOptions extends Omit<ScraperOptions, "location"> {
+interface FormOptions extends Omit<ScraperOptions, "location" | "licenseType"> {
   location: Partial<Coordinates>;
+  licenseType?: LicenseClass | "";
 }
 
 const licenseTypes: LicenseClass[] = [
@@ -52,12 +53,12 @@ const Options: FunctionalComponent = () => {
     validationSchema: Yup.object({
       radius: Yup.number()
         .label("Radius")
-        .typeError("${path} should be a number")
+        .typeError("${path} is not a valid number")
         .positive()
         .required(),
       months: Yup.number()
         .label("Number of months")
-        .typeError("${path} should be a number")
+        .typeError("${path} is not a valid number")
         .positive()
         .max(12)
         .integer()
@@ -65,11 +66,11 @@ const Options: FunctionalComponent = () => {
       location: Yup.object({
         latitude: Yup.number()
           .label("Latitude")
-          .typeError("${path} should be a number")
+          .typeError("${path} is not a valid number")
           .required(),
         longitude: Yup.number()
           .label("Longitude")
-          .typeError("${path} should be a number")
+          .typeError("${path} is not a valid number")
           .required(),
       }),
       email: Yup.string().email("Not a valid email"),
@@ -90,7 +91,7 @@ const Options: FunctionalComponent = () => {
       radius: 20,
       months: 6,
       enableContinuousSearching: false,
-      licenseType: undefined,
+      licenseType: "",
       licenseExpiry: "",
       location: { latitude: undefined, longitude: undefined },
     },
@@ -247,7 +248,7 @@ const Options: FunctionalComponent = () => {
           />
         </AccordionDetails>
       </Accordion>
-      <Button onClick={() => formik.submitForm()}>Submit</Button>
+      <Button onClick={() => formik.submitForm()}>Start</Button>
     </form>
   );
 };
