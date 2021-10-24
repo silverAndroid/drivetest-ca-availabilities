@@ -15,7 +15,6 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import { dialog } from "@tauri-apps/api";
 import { useFormik } from "formik";
 import { FunctionalComponent } from "preact";
 import { route } from "preact-router";
@@ -235,15 +234,14 @@ const Options: FunctionalComponent = () => {
         <AccordionDetails>
           <ClickableInput
             onClick={() => {
-              dialog
-                .open({
-                  multiple: false,
+              window.ipc
+                .showOpenDialog({
                   filters: [{ extensions: ["app"], name: "Apps" }],
                 })
-                .then((chromiumPath) => {
-                  if (typeof chromiumPath === "string") {
-                    formik.setFieldValue("chromiumPath", chromiumPath);
-                  }
+                .then(({ canceled, filePaths }) => {
+                  if (canceled) return;
+
+                  formik.setFieldValue("chromiumPath", filePaths[0]);
                 });
             }}
             ButtonProps={{ className: style.chromiumPath }}

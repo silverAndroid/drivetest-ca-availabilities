@@ -30,6 +30,9 @@
     "cli": {
       "tags": []
     },
+    "gui": {
+      "tags": []
+    },
     "logger": {
       "tags": []
     },
