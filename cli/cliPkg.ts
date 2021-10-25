@@ -3,7 +3,7 @@ import os from "os";
 import * as path from "path";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
 
-import { CliOptions, main } from "./main";
+import { main } from "./main";
 import { logger } from "./logger";
 import {
   parseCommanderInt,
@@ -11,6 +11,7 @@ import {
   verifyDateFormat,
   verifyLicenseNumber,
 } from "./utils";
+import { ScraperOptions } from "./utils/scraperOptions";
 
 const program = new Command();
 
@@ -135,5 +136,5 @@ async function setupCliInterface() {
 
   program.parse();
 
-  return program.opts() as CliOptions;
+  return program.opts() as ScraperOptions;
 }

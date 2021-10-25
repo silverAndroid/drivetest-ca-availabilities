@@ -1,5 +1,4 @@
 import { Page, Response } from "puppeteer";
-import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
 import {
@@ -27,6 +26,9 @@ import {
   LOCATIONS_ID,
   waitForResponse,
 } from "./responseListener";
+import { optionsQuery } from "../store/options";
+import { filter, firstValueFrom } from "rxjs";
+import { FilterOptionsState } from "../store/options/options.store";
 
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");
@@ -63,17 +65,27 @@ export async function waitToEnterBookingPage(page: Page) {
   await page.waitForSelector("#emailAddress");
 }
 
-export async function login(
-  page: Page,
-  email: string,
-  licenseNumber: string,
-  licenseExpiry: string,
-) {
+export async function login(page: Page) {
   const EMAIL_SELECTOR = "#emailAddress";
   const CONFIRM_EMAIL_SELECTOR = "#confirmEmailAddress";
   const LICENSE_NUMBER_SELECTOR = "#licenceNumber";
   const LICENSE_EXPIRY_SELECTOR = "#licenceExpiryDate";
   const SUBMIT_BTN_SELECTOR = "#regSubmitBtn";
+
+  const { email, licenseExpiry, licenseNumber } = await firstValueFrom(
+    optionsQuery.loginDetails$.pipe(
+      filter(
+        (
+          loginDetails,
+        ): loginDetails is FilterOptionsState<
+          "email" | "licenseExpiry" | "licenseNumber"
+        > => {
+          const { email, licenseExpiry, licenseNumber } = loginDetails;
+          return !!email && !!licenseExpiry && !!licenseNumber;
+        },
+      ),
+    ),
+  );
 
   await page.waitForSelector(EMAIL_SELECTOR);
   await page.click(EMAIL_SELECTOR);
@@ -118,7 +130,9 @@ export async function login(
   );
 }
 
-export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
+export async function selectLicenseType(page: Page) {
+  const licenseType = optionsQuery.licenseType;
+
   const LICENSE_BTN_SELECTOR = "#lic_" + licenseType;
   const CONTINUE_BTN_SELECTOR =
     "#booking-licence > div > form > div > div.directive_wrapper.ng-isolate-scope > button";
@@ -151,12 +165,26 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
   }
 }
 
-export async function getDriveTestCenters(
-  page: Page,
-  searchRadius: number,
-  currentLocation: Coordinates,
-  selectedLicenseClass: LicenseClass,
-) {
+export async function getDriveTestCenters(page: Page) {
+  const {
+    licenseType: selectedLicenseClass,
+    location: currentLocation,
+    radius: searchRadius,
+  } = await firstValueFrom(
+    optionsQuery.searchParameters$.pipe(
+      filter(
+        (
+          searchParams,
+        ): searchParams is FilterOptionsState<
+          "licenseType" | "radius" | "location"
+        > => {
+          const { licenseType, location, radius } = searchParams;
+          return !!licenseType && !!location && !!radius;
+        },
+      ),
+    ),
+  );
+
   const response = await waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
@@ -224,21 +252,12 @@ export async function getDriveTestCenters(
 
 const rateLimiter = RateLimit(15, { uniformDistribution: true });
 
-async function* findAvailableDates(
-  page: Page,
-  location: DriveTestCenterLocation,
-  numMonths: number,
-): AsyncGenerator<
+type AvailableDateResultBase =
   | {
       type: Result.SEARCHING;
       month: number;
       name: string;
       times?: undefined;
-    }
-  | {
-      type: Result.FOUND;
-      times: Date[];
-      month?: undefined;
     }
   | {
       type: Result.FAILED;
@@ -247,9 +266,21 @@ async function* findAvailableDates(
         code: number;
         message: string;
       };
-    },
-  Date[]
-> {
+    };
+type AvailableDateResult =
+  | AvailableDateResultBase
+  | {
+      type: Result.FOUND;
+      times: Date[];
+      month?: undefined;
+    };
+
+async function* findAvailableDates(
+  page: Page,
+  location: DriveTestCenterLocation,
+): AsyncGenerator<AvailableDateResult, Date[]> {
+  let numMonths = optionsQuery.months;
+
   const LOCATION_SELECTOR = `a[id="${location.id}"]`;
   const LOCATION_CONTINUE_BTN_SELECTOR =
     "#booking-location > div > div > form > div.form-group.loc-submit > div.directive_wrapper.ng-isolate-scope > button";
@@ -375,34 +406,23 @@ async function* findAvailableDates(
   return availableDates;
 }
 
+export type FoundResult = {
+  type: Result.FOUND;
+  name: string;
+  time: Date;
+};
+export type AvailabilityResult = AvailableDateResultBase | FoundResult;
+
 export async function* findAvailabilities(
   page: Page,
   availableCenters: DriveTestCenterLocation[],
-  numMonths = 6,
 ): AsyncGenerator<
-  | {
-      type: Result.SEARCHING;
-      month: number;
-      name: string;
-    }
-  | {
-      type: Result.FOUND;
-      name: string;
-      time: Date;
-    }
-  | {
-      type: Result.FAILED;
-      name: string;
-      error: {
-        code: number;
-        message: string;
-      };
-    },
+  AvailabilityResult,
   Record<string, { name: string; time: Date }[]>
 > {
   const dates: Record<string, { name: string; time: Date }[]> = {};
   for (const driveCenter of availableCenters) {
-    const availableDates = findAvailableDates(page, driveCenter, numMonths);
+    const availableDates = findAvailableDates(page, driveCenter);
     for await (const result of availableDates) {
       if (result.type === Result.FOUND) {
         for (const availableDate of result.times) {

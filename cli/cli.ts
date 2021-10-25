@@ -1,9 +1,10 @@
 import { Command } from "commander";
 import { readFile } from "fs";
 import os from "os";
+import path from "path";
 import { promisify } from "util";
 
-import { CliOptions, main } from "./main";
+import { main } from "./main";
 import { logger } from "./logger";
 import {
   parseCommanderInt,
@@ -11,6 +12,7 @@ import {
   verifyDateFormat,
   verifyLicenseNumber,
 } from "./utils";
+import { ScraperOptions } from "./utils/scraperOptions";
 
 const readFileAsync = promisify(readFile);
 
@@ -31,9 +33,11 @@ setupCliInterface()
 async function setupCliInterface() {
   let config;
   try {
-    const configJSON = await readFileAsync("./config.json");
+    const configJSON = await readFileAsync(
+      path.join(process.cwd(), "config.json"),
+    );
     config = JSON.parse(configJSON.toString());
-  } catch (error) {
+  } catch (error: any) {
     if (error.message.includes("no such file")) {
       throw new Error(
         "config.json not found in same directory as this program!",
@@ -101,5 +105,5 @@ async function setupCliInterface() {
 
   program.parse();
 
-  return program.opts() as CliOptions;
+  return program.opts() as ScraperOptions;
 }
