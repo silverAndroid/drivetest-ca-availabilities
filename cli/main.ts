@@ -4,16 +4,16 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
-import { optionsQuery, optionsService } from "../store/options";
 
-import { logger } from "./logger";
+import { optionsQuery, optionsService } from "../store/options";
+import { responsesService } from "../store/responses";
 import {
-  listenForResponses,
-  ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
+  ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
-} from "./responseListener";
+} from "../store/responses/responseIds";
+import { logger } from "./logger";
 import {
   login,
   selectLicenseType,
@@ -92,7 +92,7 @@ export async function main(options: ScraperOptions) {
     page.setDefaultTimeout(0);
     page.setDefaultNavigationTimeout(0);
 
-    listenForResponses(page, (req) => {
+    responsesService.listenForResponses(page, (req) => {
       const url = req.url();
       if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
         return ELIGIBILITY_CHECK_ID;

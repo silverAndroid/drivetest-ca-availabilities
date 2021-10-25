@@ -1,15 +1,8 @@
 import { Page, Response } from "puppeteer";
 import { RateLimit } from "async-sema";
 
+import { distanceTo, isInLicenseRange, retryIfFail, Unit } from "./utils";
 import {
-  Coordinates,
-  distanceTo,
-  isInLicenseRange,
-  retryIfFail,
-  Unit,
-} from "./utils";
-import {
-  LicenseClass,
   DriveTestCenterLocationsResponse,
   DriveTestCenterLocation,
   BookingDateResponse,
@@ -19,16 +12,16 @@ import {
 } from "./api/interfaces";
 import { Result } from "./utils/enums";
 import { logger } from "./logger";
+import { optionsQuery } from "../store/options";
+import { filter, firstValueFrom } from "rxjs";
+import { FilterOptionsState } from "../store/options/options.store";
+import { responsesQuery } from "../store/responses";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
-  waitForResponse,
-} from "./responseListener";
-import { optionsQuery } from "../store/options";
-import { filter, firstValueFrom } from "rxjs";
-import { FilterOptionsState } from "../store/options/options.store";
+} from "../store/responses/responseIds";
 
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");
@@ -141,7 +134,10 @@ export async function selectLicenseType(page: Page) {
   await page.click(LICENSE_BTN_SELECTOR);
   await page.click(CONTINUE_BTN_SELECTOR);
 
-  const response = await waitForResponse(page, ELIGIBILITY_CHECK_ID);
+  const response = await responsesQuery.waitForResponse(
+    page,
+    ELIGIBILITY_CHECK_ID,
+  );
   if (response.status() === 412) {
     logger.trace('Going through "editing existing booking" flow');
     const EDIT_BOOKING_SELECTOR = "#booking-licence > div > form > div > a";
@@ -185,7 +181,7 @@ export async function getDriveTestCenters(page: Page) {
     ),
   );
 
-  const response = await waitForResponse(page, LOCATIONS_ID);
+  const response = await responsesQuery.waitForResponse(page, LOCATIONS_ID);
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
   logger.debug("Fetched drivetest locations");
@@ -313,7 +309,10 @@ async function* findAvailableDates(
 
     let bookingDateResponse: Response;
     try {
-      bookingDateResponse = await waitForResponse(page, BOOKING_DATES_ID);
+      bookingDateResponse = await responsesQuery.waitForResponse(
+        page,
+        BOOKING_DATES_ID,
+      );
       month =
         Number(
           new URLSearchParams(bookingDateResponse.url().split("?").pop()).get(
@@ -361,7 +360,7 @@ async function* findAvailableDates(
             logger.debug("clicking %s", calendarContinueBtnSelector);
             await page.click(calendarContinueBtnSelector);
 
-            const bookingTimesResponse = await waitForResponse(
+            const bookingTimesResponse = await responsesQuery.waitForResponse(
               page,
               BOOKING_TIMES_ID,
             );
