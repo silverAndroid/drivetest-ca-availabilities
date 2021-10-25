@@ -8,9 +8,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "node cli.js",
+    "start": "node ./dist/cli.js",
     "build": "tsc",
-    "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./cliPkg.js",
+    "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./dist/cliPkg.js",
     "package:dev": "yarn build && yarn package",
     "prepare": "husky install"
   },
