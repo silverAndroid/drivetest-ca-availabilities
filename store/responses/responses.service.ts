@@ -1,4 +1,3 @@
-import { ID } from "@datorama/akita";
 import { Logger } from "pino";
 import {
   Page,
@@ -23,7 +22,7 @@ export class ResponsesService {
       if (req) {
         const savedId = shouldSaveResponse(req);
         if (savedId) {
-          logger?.debug("waiting for response %s", savedId);
+          logger?.debug("waiting for response %s %s", savedId, req.url());
           this.responsesStore.update({
             [savedId]: new Promise(async (resolve) => {
               while (true) {
@@ -44,8 +43,9 @@ export class ResponsesService {
     });
   }
 
-  resetResponse(responseId: SavedResponseId) {
+  resetResponse(responseId: SavedResponseId, logger?: Logger) {
     this.responsesStore.update({ [responseId]: undefined });
+    logger?.trace("reset response %s", responseId);
   }
 }
 

@@ -92,20 +92,24 @@ export async function main(options: ScraperOptions) {
     page.setDefaultTimeout(0);
     page.setDefaultNavigationTimeout(0);
 
-    responsesService.listenForResponses(page, (req) => {
-      const url = req.url();
-      if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
-        return ELIGIBILITY_CHECK_ID;
-      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking/")) {
-        return BOOKING_DATES_ID;
-      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
-        return BOOKING_TIMES_ID;
-      } else if (url === "https://drivetest.ca/booking/v1/location") {
-        return LOCATIONS_ID;
-      }
+    responsesService.listenForResponses(
+      page,
+      (req) => {
+        const url = req.url();
+        if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
+          return ELIGIBILITY_CHECK_ID;
+        } else if (url.startsWith("https://drivetest.ca/booking/v1/booking/")) {
+          return BOOKING_DATES_ID;
+        } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
+          return BOOKING_TIMES_ID;
+        } else if (url === "https://drivetest.ca/booking/v1/location") {
+          return LOCATIONS_ID;
+        }
 
-      return null;
-    });
+        return null;
+      },
+      logger,
+    );
 
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 

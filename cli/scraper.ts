@@ -141,6 +141,7 @@ export async function selectLicenseType(page: Page) {
   const response = await responsesQuery.waitForResponse(
     page,
     ELIGIBILITY_CHECK_ID,
+    logger,
   );
   if (response.status() === 412) {
     logger.trace('Going through "editing existing booking" flow');
@@ -185,7 +186,11 @@ export async function getDriveTestCenters(page: Page) {
     ),
   );
 
-  const response = await responsesQuery.waitForResponse(page, LOCATIONS_ID);
+  const response = await responsesQuery.waitForResponse(
+    page,
+    LOCATIONS_ID,
+    logger,
+  );
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
   logger.debug("Fetched drivetest locations");
@@ -316,6 +321,7 @@ async function* findAvailableDates(
       bookingDateResponse = await responsesQuery.waitForResponse(
         page,
         BOOKING_DATES_ID,
+        logger,
       );
       month =
         Number(
@@ -367,6 +373,7 @@ async function* findAvailableDates(
             const bookingTimesResponse = await responsesQuery.waitForResponse(
               page,
               BOOKING_TIMES_ID,
+              logger,
             );
             const { availableBookingTimes = [] } =
               (await bookingTimesResponse.json()) as BookingTimeResponse;
