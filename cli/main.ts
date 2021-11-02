@@ -3,7 +3,9 @@ import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
+import { merge, map, takeUntil, lastValueFrom, filter } from "rxjs";
 import semver from "semver";
+import { availabilitiesQuery, FoundResult } from "../store/availabilities";
 
 import { optionsQuery, optionsService } from "../store/options";
 import { responsesService } from "../store/responses";
@@ -20,7 +22,6 @@ import {
   findAvailabilities,
   waitToEnterBookingPage,
   getDriveTestCenters,
-  FoundResult,
 } from "./scraper";
 import { Result } from "./utils";
 import { ScraperOptions } from "./utils/scraperOptions";
@@ -135,7 +136,7 @@ export async function main(options: ScraperOptions) {
     const foundResults: FoundResult[] = [];
 
     do {
-      for await (const result of findAvailabilities(page, availableCenters)) {
+      availabilitiesQuery.updates$.subscribe((result) => {
         if (result.type === Result.SEARCHING) {
           logger.info(
             "Searching %s at location %s",
@@ -157,7 +158,9 @@ export async function main(options: ScraperOptions) {
           );
           foundResults.push(result);
         }
-      }
+      });
+
+      await findAvailabilities(page, availableCenters);
 
       if (foundResults.length === 0) {
         logger.error("No timeslots found");

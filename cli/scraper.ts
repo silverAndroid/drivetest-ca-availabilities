@@ -13,15 +13,20 @@ import {
 import { Result } from "./utils/enums";
 import { logger } from "./logger";
 import { optionsQuery } from "../store/options";
-import { filter, firstValueFrom } from "rxjs";
+import { filter, firstValueFrom, map, merge, Observable, of } from "rxjs";
 import { FilterOptionsState } from "../store/options/options.store";
-import { responsesQuery } from "../store/responses";
+import { responsesQuery, responsesService } from "../store/responses";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
 } from "../store/responses/responseIds";
+import {
+  availabilitiesQuery,
+  availabilitiesService,
+} from "../store/availabilities";
+import { promisesConcat } from "./utils/promise";
 
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");
@@ -257,33 +262,10 @@ export async function getDriveTestCenters(page: Page) {
 
 const rateLimiter = RateLimit(15, { uniformDistribution: true });
 
-type AvailableDateResultBase =
-  | {
-      type: Result.SEARCHING;
-      month: number;
-      name: string;
-      times?: undefined;
-    }
-  | {
-      type: Result.FAILED;
-      name: string;
-      error: {
-        code: number;
-        message: string;
-      };
-    };
-type AvailableDateResult =
-  | AvailableDateResultBase
-  | {
-      type: Result.FOUND;
-      times: Date[];
-      month?: undefined;
-    };
-
-async function* findAvailableDates(
+async function findAvailableDates(
   page: Page,
   location: DriveTestCenterLocation,
-): AsyncGenerator<AvailableDateResult, Date[]> {
+) {
   let numMonths = optionsQuery.months;
 
   const LOCATION_SELECTOR = `a[id="${location.id}"]`;
@@ -342,20 +324,19 @@ async function* findAvailableDates(
       (await bookingDateResponse.json()) as BookingDateResponse;
     const { availableBookingDates, statusCode } = bookingDateJson;
 
+    availabilitiesService.updateSearchingState(
+      location.id,
+      location.name,
+      month,
+    );
+
     if (statusCode > 0) {
       const { statusMessage } = bookingDateJson as unknown as BookingDateError;
-      yield {
-        type: Result.FAILED,
-        name: location.name,
-        error: {
-          code: statusCode,
-          message: statusMessage,
-        },
-      };
-      return [];
+      availabilitiesService.setError({
+        code: statusCode,
+        message: statusMessage,
+      });
     }
-
-    yield { type: Result.SEARCHING, name: location.name, month };
 
     for (const { description, day } of availableBookingDates) {
       if (description === Description.Open) {
@@ -382,18 +363,14 @@ async function* findAvailableDates(
           [page, DATE_SELECTOR, CALENDAR_CONTINUE_BTN_SELECTOR],
           { maxRetries: 100 },
         );
+        for (const availability of availableBookingTimes) {
+          availabilitiesService.addNewResult(new Date(availability.timeslot));
+        }
 
         availableDates = [
           ...availableDates,
           ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
         ];
-
-        yield {
-          type: Result.FOUND,
-          times: availableBookingTimes.map(
-            ({ timeslot }) => new Date(timeslot),
-          ),
-        };
 
         // need to wait 2 seconds for scrolling to finish
         await page.waitForTimeout(2000);
@@ -412,49 +389,17 @@ async function* findAvailableDates(
       );
     }
   } while (numMonths-- > 0);
-
-  return availableDates;
 }
 
-export type FoundResult = {
-  type: Result.FOUND;
-  name: string;
-  time: Date;
-};
-export type AvailabilityResult = AvailableDateResultBase | FoundResult;
-
-export async function* findAvailabilities(
+export async function findAvailabilities(
   page: Page,
   availableCenters: DriveTestCenterLocation[],
-): AsyncGenerator<
-  AvailabilityResult,
-  Record<string, { name: string; time: Date }[]>
-> {
-  const dates: Record<string, { name: string; time: Date }[]> = {};
-  for (const driveCenter of availableCenters) {
-    const availableDates = findAvailableDates(page, driveCenter);
-    for await (const result of availableDates) {
-      if (result.type === Result.FOUND) {
-        for (const availableDate of result.times) {
-          const [date] = availableDate.toISOString().split("T");
-          yield {
-            type: Result.FOUND,
-            name: driveCenter.name,
-            time: availableDate,
-          };
-          dates[date] = [
-            ...(dates[date] || []),
-            {
-              name: driveCenter.name,
-              time: availableDate,
-            },
-          ];
-        }
-      } else {
-        yield result;
-      }
-    }
-  }
+) {
+  await promisesConcat(
+    availableCenters.map(
+      (driveCenter) => () => findAvailableDates(page, driveCenter),
+    ),
+  );
 
-  return dates;
+  availabilitiesService.setSearchComplete();
 }
