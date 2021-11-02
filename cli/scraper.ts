@@ -29,12 +29,16 @@ export async function waitToEnterBookingPage(page: Page) {
   try {
     await retryIfFail(
       async function passCaptcha(page: Page) {
-        await page.waitForNavigation();
+        await page.waitForNavigation({ waitUntil: ["domcontentloaded"] });
 
-        const { getInnerText } = await import("./evaluate");
-        const headerElem = await page.$("#headerBar");
-        const headerText = await headerElem?.evaluate(getInnerText);
-        if (headerText === "CAPTCHA check") {
+        const HEADER_ELEM_SELECTOR = "#headerBar";
+        const REGISTRATION_PANEL_SELECTOR = "#booking-registration";
+
+        const didCaptchaPass = await Promise.race([
+          page.waitForSelector(HEADER_ELEM_SELECTOR).then(() => false),
+          page.waitForSelector(REGISTRATION_PANEL_SELECTOR).then(() => true),
+        ]);
+        if (!didCaptchaPass) {
           throw new Error("Failed to pass HCaptcha");
         }
       },
