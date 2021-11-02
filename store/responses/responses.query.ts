@@ -1,7 +1,7 @@
 import { filterNilValue, Query } from "@datorama/akita";
 import { Logger } from "pino";
 import { Page, Response as HTTPResponse } from "puppeteer";
-import { catchError, firstValueFrom, from, race, tap } from "rxjs";
+import { catchError, firstValueFrom, from, race, tap, timeout } from "rxjs";
 
 import { ResponsesService, responsesService } from "./responses.service";
 import {
@@ -38,7 +38,7 @@ export class ResponsesQuery extends Query<ResponsesState> {
   }
 
   getSavedResponse = (responseId: SavedResponseId) =>
-    this.select(responseId).pipe(filterNilValue());
+    this.select(responseId).pipe(timeout(5000), filterNilValue());
 
   async waitForResponse(
     page: Page,
@@ -58,12 +58,11 @@ export class ResponsesQuery extends Query<ResponsesState> {
             return this.getSavedResponse(responseId);
           }),
         ),
-      ]).pipe(
-        tap({ next: () => this.responsesService.resetResponse(responseId) }),
-      ),
+      ]),
     );
 
-    logger?.trace("received response %s", responseId);
+    logger?.trace("returning response %s", responseId);
+    this.responsesService.resetResponse(responseId, logger);
     return response;
   }
 }
