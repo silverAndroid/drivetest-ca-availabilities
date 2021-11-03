@@ -1,9 +1,9 @@
 import { Command } from "commander";
-import { readFile } from "fs";
 import os from "os";
-import { promisify } from "util";
+import * as path from "path";
+import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
 
-import { CliOptions, main } from "./main";
+import { main } from "./main";
 import { logger } from "./logger";
 import {
   parseCommanderInt,
@@ -11,12 +11,21 @@ import {
   verifyDateFormat,
   verifyLicenseNumber,
 } from "./utils";
-
-const readFileAsync = promisify(readFile);
+import { ScraperOptions } from "./utils/scraperOptions";
 
 const program = new Command();
 
 setupCliInterface()
+  .then(async (options) => {
+    if (options.chromiumPath) {
+      return options;
+    }
+
+    return {
+      ...options,
+      chromiumPath: await downloadChrome(),
+    };
+  })
   .then((options) => main(options))
   .catch((err: Error) => {
     if (err.stack) {
@@ -28,21 +37,50 @@ setupCliInterface()
     process.exit(1);
   });
 
-async function setupCliInterface() {
-  let config;
-  try {
-    const configJSON = await readFileAsync("./config.json");
-    config = JSON.parse(configJSON.toString());
-  } catch (error) {
-    if (error.message.includes("no such file")) {
-      throw new Error(
-        "config.json not found in same directory as this program!",
-      );
-    }
-
-    throw error;
+async function downloadChrome() {
+  function toMegabytes(bytes: number) {
+    const mb = bytes / 1024 / 1024;
+    return `${Math.round(mb * 10) / 10} Mb`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const ProgressBar = require("progress");
+  let progressBar: typeof ProgressBar;
+
+  const dirName = process.cwd();
+  const projectRoot = dirName.includes("dist")
+    ? path.join(dirName, "../../../")
+    : dirName;
+  const browserFetcher = new BrowserFetcher(projectRoot);
+  let lastDownloadedBytes = 0;
+  const revisionInfo = await browserFetcher.download(
+    // revision number taken from https://github.com/puppeteer/puppeteer/blob/v8.0.0/src/revisions.ts#L23
+    "856583",
+    (downloaded, total) => {
+      if (!progressBar) {
+        progressBar = new ProgressBar(
+          `Downloading compatible version of Chrome - ${toMegabytes(
+            total,
+          )} [:bar] :percent :etas `,
+          {
+            complete: "=",
+            incomplete: " ",
+            width: 20,
+            total,
+          },
+        );
+      }
+
+      const delta = downloaded - lastDownloadedBytes;
+      lastDownloadedBytes = downloaded;
+      progressBar.tick(delta);
+    },
+  );
+
+  return revisionInfo.executablePath;
+}
+
+async function setupCliInterface() {
   program
     .option(
       "-r, --radius <radius>",
@@ -61,23 +99,20 @@ async function setupCliInterface() {
       (val) => parseCommanderInt(val, "months"),
       6,
     )
-    .option(
+    .requiredOption(
       "--licenseType <licenseType>",
       "License type exam to search for",
-      config.licenseType,
     )
-    .option("--email <email>", "Email to log in with", config.email)
-    .option(
+    .requiredOption("--email <email>", "Email to log in with")
+    .requiredOption(
       "--licenseNumber <licenseNumber>",
       "License number to log in with",
       verifyLicenseNumber,
-      config.licenseNumber,
     )
-    .option(
+    .requiredOption(
       "--licenseExpiry <licenseExpiry>",
       'License expiry date expressed in "YYYY/MM/DD" to log in with',
       verifyDateFormat,
-      config.licenseExpiry,
     )
     .option(
       "--enableContinuousSearching",
@@ -101,5 +136,5 @@ async function setupCliInterface() {
 
   program.parse();
 
-  return program.opts() as CliOptions;
+  return program.opts() as ScraperOptions;
 }

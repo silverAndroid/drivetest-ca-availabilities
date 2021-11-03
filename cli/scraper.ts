@@ -1,16 +1,8 @@
 import { Page, Response } from "puppeteer";
-import fetch from "node-fetch";
 import { RateLimit } from "async-sema";
 
+import { distanceTo, isInLicenseRange, retryIfFail, Unit } from "./utils";
 import {
-  Coordinates,
-  distanceTo,
-  isInLicenseRange,
-  retryIfFail,
-  Unit,
-} from "./utils";
-import {
-  LicenseClass,
   DriveTestCenterLocationsResponse,
   DriveTestCenterLocation,
   BookingDateResponse,
@@ -18,15 +10,19 @@ import {
   BookingTimeResponse,
   BookingDateError,
 } from "./api/interfaces";
-import { Result } from "./utils/enums";
 import { logger } from "./logger";
+import { optionsQuery } from "../store/options";
+import { filter, firstValueFrom } from "rxjs";
+import { FilterOptionsState } from "../store/options/options.store";
+import { responsesQuery } from "../store/responses";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
-  waitForResponse,
-} from "./responseListener";
+} from "../store/responses/responseIds";
+import { availabilitiesService } from "../store/availabilities";
+import { promisesConcat } from "./utils/promise";
 
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");
@@ -34,12 +30,16 @@ export async function waitToEnterBookingPage(page: Page) {
   try {
     await retryIfFail(
       async function passCaptcha(page: Page) {
-        await page.waitForNavigation();
+        await page.waitForNavigation({ waitUntil: ["domcontentloaded"] });
 
-        const { getInnerText } = await import("./evaluate");
-        const headerElem = await page.$("#headerBar");
-        const headerText = await headerElem?.evaluate(getInnerText);
-        if (headerText === "CAPTCHA check") {
+        const HEADER_ELEM_SELECTOR = "#headerBar";
+        const REGISTRATION_PANEL_SELECTOR = "#booking-registration";
+
+        const didCaptchaPass = await Promise.race([
+          page.waitForSelector(HEADER_ELEM_SELECTOR).then(() => false),
+          page.waitForSelector(REGISTRATION_PANEL_SELECTOR).then(() => true),
+        ]);
+        if (!didCaptchaPass) {
           throw new Error("Failed to pass HCaptcha");
         }
       },
@@ -63,17 +63,16 @@ export async function waitToEnterBookingPage(page: Page) {
   await page.waitForSelector("#emailAddress");
 }
 
-export async function login(
-  page: Page,
-  email: string,
-  licenseNumber: string,
-  licenseExpiry: string,
-) {
+export async function login(page: Page) {
   const EMAIL_SELECTOR = "#emailAddress";
   const CONFIRM_EMAIL_SELECTOR = "#confirmEmailAddress";
   const LICENSE_NUMBER_SELECTOR = "#licenceNumber";
   const LICENSE_EXPIRY_SELECTOR = "#licenceExpiryDate";
   const SUBMIT_BTN_SELECTOR = "#regSubmitBtn";
+
+  const { email, licenseExpiry, licenseNumber } = await firstValueFrom(
+    optionsQuery.loginDetails$,
+  );
 
   await page.waitForSelector(EMAIL_SELECTOR);
   await page.click(EMAIL_SELECTOR);
@@ -118,7 +117,9 @@ export async function login(
   );
 }
 
-export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
+export async function selectLicenseType(page: Page) {
+  const licenseType = optionsQuery.licenseType;
+
   const LICENSE_BTN_SELECTOR = "#lic_" + licenseType;
   const CONTINUE_BTN_SELECTOR =
     "#booking-licence > div > form > div > div.directive_wrapper.ng-isolate-scope > button";
@@ -127,7 +128,11 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
   await page.click(LICENSE_BTN_SELECTOR);
   await page.click(CONTINUE_BTN_SELECTOR);
 
-  const response = await waitForResponse(page, ELIGIBILITY_CHECK_ID);
+  const response = await responsesQuery.waitForResponse(
+    page,
+    ELIGIBILITY_CHECK_ID,
+    logger,
+  );
   if (response.status() === 412) {
     logger.trace('Going through "editing existing booking" flow');
     const EDIT_BOOKING_SELECTOR = "#booking-licence > div > form > div > a";
@@ -151,13 +156,18 @@ export async function selectLicenseType(page: Page, licenseType: LicenseClass) {
   }
 }
 
-export async function getDriveTestCenters(
-  page: Page,
-  searchRadius: number,
-  currentLocation: Coordinates,
-  selectedLicenseClass: LicenseClass,
-) {
-  const response = await waitForResponse(page, LOCATIONS_ID);
+export async function getDriveTestCenters(page: Page) {
+  const {
+    licenseType: selectedLicenseClass,
+    location: currentLocation,
+    radius: searchRadius,
+  } = await firstValueFrom(optionsQuery.searchParameters$);
+
+  const response = await responsesQuery.waitForResponse(
+    page,
+    LOCATIONS_ID,
+    logger,
+  );
   const { driveTestCentres } =
     (await response.json()) as DriveTestCenterLocationsResponse;
   logger.debug("Fetched drivetest locations");
@@ -224,32 +234,12 @@ export async function getDriveTestCenters(
 
 const rateLimiter = RateLimit(15, { uniformDistribution: true });
 
-async function* findAvailableDates(
+async function findAvailableDates(
   page: Page,
   location: DriveTestCenterLocation,
-  numMonths: number,
-): AsyncGenerator<
-  | {
-      type: Result.SEARCHING;
-      month: number;
-      name: string;
-      times?: undefined;
-    }
-  | {
-      type: Result.FOUND;
-      times: Date[];
-      month?: undefined;
-    }
-  | {
-      type: Result.FAILED;
-      name: string;
-      error: {
-        code: number;
-        message: string;
-      };
-    },
-  Date[]
-> {
+) {
+  let numMonths = optionsQuery.months;
+
   const LOCATION_SELECTOR = `a[id="${location.id}"]`;
   const LOCATION_CONTINUE_BTN_SELECTOR =
     "#booking-location > div > div > form > div.form-group.loc-submit > div.directive_wrapper.ng-isolate-scope > button";
@@ -275,14 +265,17 @@ async function* findAvailableDates(
   }
   await clickLocation();
 
-  let availableDates: Date[] = [];
   do {
     let month = 0;
     logger.debug("waiting for response with dates for location");
 
     let bookingDateResponse: Response;
     try {
-      bookingDateResponse = await waitForResponse(page, BOOKING_DATES_ID);
+      bookingDateResponse = await responsesQuery.waitForResponse(
+        page,
+        BOOKING_DATES_ID,
+        logger,
+      );
       month =
         Number(
           new URLSearchParams(bookingDateResponse.url().split("?").pop()).get(
@@ -302,20 +295,19 @@ async function* findAvailableDates(
       (await bookingDateResponse.json()) as BookingDateResponse;
     const { availableBookingDates, statusCode } = bookingDateJson;
 
+    availabilitiesService.updateSearchingState(
+      location.id,
+      location.name,
+      month,
+    );
+
     if (statusCode > 0) {
       const { statusMessage } = bookingDateJson as unknown as BookingDateError;
-      yield {
-        type: Result.FAILED,
-        name: location.name,
-        error: {
-          code: statusCode,
-          message: statusMessage,
-        },
-      };
-      return [];
+      availabilitiesService.setError({
+        code: statusCode,
+        message: statusMessage,
+      });
     }
-
-    yield { type: Result.SEARCHING, name: location.name, month };
 
     for (const { description, day } of availableBookingDates) {
       if (description === Description.Open) {
@@ -330,9 +322,10 @@ async function* findAvailableDates(
             logger.debug("clicking %s", calendarContinueBtnSelector);
             await page.click(calendarContinueBtnSelector);
 
-            const bookingTimesResponse = await waitForResponse(
+            const bookingTimesResponse = await responsesQuery.waitForResponse(
               page,
               BOOKING_TIMES_ID,
+              logger,
             );
             const { availableBookingTimes = [] } =
               (await bookingTimesResponse.json()) as BookingTimeResponse;
@@ -341,18 +334,9 @@ async function* findAvailableDates(
           [page, DATE_SELECTOR, CALENDAR_CONTINUE_BTN_SELECTOR],
           { maxRetries: 100 },
         );
-
-        availableDates = [
-          ...availableDates,
-          ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
-        ];
-
-        yield {
-          type: Result.FOUND,
-          times: availableBookingTimes.map(
-            ({ timeslot }) => new Date(timeslot),
-          ),
-        };
+        for (const availability of availableBookingTimes) {
+          availabilitiesService.addNewResult(new Date(availability.timeslot));
+        }
 
         // need to wait 2 seconds for scrolling to finish
         await page.waitForTimeout(2000);
@@ -371,60 +355,17 @@ async function* findAvailableDates(
       );
     }
   } while (numMonths-- > 0);
-
-  return availableDates;
 }
 
-export async function* findAvailabilities(
+export async function findAvailabilities(
   page: Page,
   availableCenters: DriveTestCenterLocation[],
-  numMonths = 6,
-): AsyncGenerator<
-  | {
-      type: Result.SEARCHING;
-      month: number;
-      name: string;
-    }
-  | {
-      type: Result.FOUND;
-      name: string;
-      time: Date;
-    }
-  | {
-      type: Result.FAILED;
-      name: string;
-      error: {
-        code: number;
-        message: string;
-      };
-    },
-  Record<string, { name: string; time: Date }[]>
-> {
-  const dates: Record<string, { name: string; time: Date }[]> = {};
-  for (const driveCenter of availableCenters) {
-    const availableDates = findAvailableDates(page, driveCenter, numMonths);
-    for await (const result of availableDates) {
-      if (result.type === Result.FOUND) {
-        for (const availableDate of result.times) {
-          const [date] = availableDate.toISOString().split("T");
-          yield {
-            type: Result.FOUND,
-            name: driveCenter.name,
-            time: availableDate,
-          };
-          dates[date] = [
-            ...(dates[date] || []),
-            {
-              name: driveCenter.name,
-              time: availableDate,
-            },
-          ];
-        }
-      } else {
-        yield result;
-      }
-    }
-  }
+) {
+  await promisesConcat(
+    availableCenters.map(
+      (driveCenter) => () => findAvailableDates(page, driveCenter),
+    ),
+  );
 
-  return dates;
+  availabilitiesService.setSearchComplete();
 }

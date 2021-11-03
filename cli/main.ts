@@ -3,17 +3,19 @@ import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
+import { merge, map, takeUntil, lastValueFrom, filter } from "rxjs";
 import semver from "semver";
+import { availabilitiesQuery, FoundResult } from "../store/availabilities";
 
-import { LicenseClass } from "./api/interfaces";
-import { logger } from "./logger";
+import { optionsQuery, optionsService } from "../store/options";
+import { responsesService } from "../store/responses";
 import {
-  listenForResponses,
-  ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
+  ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
-} from "./responseListener";
+} from "../store/responses/responseIds";
+import { logger } from "./logger";
 import {
   login,
   selectLicenseType,
@@ -21,26 +23,19 @@ import {
   waitToEnterBookingPage,
   getDriveTestCenters,
 } from "./scraper";
-import { Coordinates, Result } from "./utils";
+import { Result } from "./utils";
+import { ScraperOptions } from "./utils/scraperOptions";
 import { sleep } from "./utils/sleep";
 
-export interface CliOptions {
-  email: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  licenseType: LicenseClass;
-  radius: number;
-  location: Coordinates;
-  months: number;
-  chromiumPath: string;
-  enableContinuousSearching: boolean;
+function getCliVersion(): string {
+  return process.env.npm_package_version || require("../package.json").version;
 }
 
 async function checkCliUpdate() {
   const res = await fetch(
     "https://github.com/silverAndroid/drivetest-ca-availabilities/releases/latest",
   );
-  const { version: currentVersion } = require("./package.json");
+  const currentVersion = getCliVersion();
   const newVersion = res.url.split("/").slice(-1)[0];
 
   if (semver.lt(currentVersion, newVersion)) {
@@ -53,7 +48,7 @@ async function checkCliUpdate() {
   return null;
 }
 
-export async function main(options: CliOptions) {
+export async function main(options: ScraperOptions) {
   logger.info("Checking for updates...");
   const update = await checkCliUpdate();
   if (update) {
@@ -79,23 +74,11 @@ export async function main(options: CliOptions) {
       return;
     }
   } else {
-    logger.info(
-      "No new updates found, current version %s",
-      require("./package.json").version,
-    );
+    logger.info("No new updates found, current version %s", getCliVersion());
   }
 
-  const {
-    email,
-    licenseNumber,
-    licenseExpiry,
-    licenseType,
-    radius,
-    location,
-    months,
-    chromiumPath,
-    enableContinuousSearching,
-  } = options;
+  const { licenseType, enableContinuousSearching } = options;
+  optionsService.setOptions(options);
 
   let browser: puppeteerType.Browser | undefined;
   let shouldCloseBrowserWhenDone = true;
@@ -103,42 +86,41 @@ export async function main(options: CliOptions) {
     puppeteer.use(StealthPlugin());
     browser = await puppeteer.launch({
       headless: false,
-      executablePath: chromiumPath,
+      executablePath: optionsQuery.chromiumPath,
       defaultViewport: null as unknown as undefined,
     });
     const page = await browser.newPage();
     page.setDefaultTimeout(0);
     page.setDefaultNavigationTimeout(0);
 
-    listenForResponses(page, (req) => {
-      const url = req.url();
-      if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
-        return ELIGIBILITY_CHECK_ID;
-      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking/")) {
-        return BOOKING_DATES_ID;
-      } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
-        return BOOKING_TIMES_ID;
-      } else if (url === "https://drivetest.ca/booking/v1/location") {
-        return LOCATIONS_ID;
-      }
+    responsesService.listenForResponses(
+      page,
+      (req) => {
+        const url = req.url();
+        if (url === "https://drivetest.ca/booking/v1/eligibilityCheck") {
+          return ELIGIBILITY_CHECK_ID;
+        } else if (url.startsWith("https://drivetest.ca/booking/v1/booking/")) {
+          return BOOKING_DATES_ID;
+        } else if (url.startsWith("https://drivetest.ca/booking/v1/booking")) {
+          return BOOKING_TIMES_ID;
+        } else if (url === "https://drivetest.ca/booking/v1/location") {
+          return LOCATIONS_ID;
+        }
 
-      return null;
-    });
+        return null;
+      },
+      logger,
+    );
 
     await page.goto("https://drivetest.ca/book-a-road-test/booking.html");
 
     await waitToEnterBookingPage(page);
     logger.info("Logging in...");
-    await login(page, email, licenseNumber, licenseExpiry);
+    await login(page);
     logger.info("Finding available times for a %s exam", licenseType);
-    await selectLicenseType(page, licenseType);
+    await selectLicenseType(page);
 
-    const availableCenters = await getDriveTestCenters(
-      page,
-      radius,
-      location,
-      licenseType,
-    );
+    const availableCenters = await getDriveTestCenters(page);
     if (availableCenters.length === 0) {
       logger.error("No Drivetest centers that match your preferences");
       return;
@@ -151,18 +133,10 @@ export async function main(options: CliOptions) {
       );
     }
 
-    const foundResults: {
-      type: Result.FOUND;
-      name: string;
-      time: Date;
-    }[] = [];
+    const foundResults: FoundResult[] = [];
 
     do {
-      for await (const result of findAvailabilities(
-        page,
-        availableCenters,
-        months,
-      )) {
+      availabilitiesQuery.updates$.subscribe((result) => {
         if (result.type === Result.SEARCHING) {
           logger.info(
             "Searching %s at location %s",
@@ -184,7 +158,9 @@ export async function main(options: CliOptions) {
           );
           foundResults.push(result);
         }
-      }
+      });
+
+      await findAvailabilities(page, availableCenters);
 
       if (foundResults.length === 0) {
         logger.error("No timeslots found");

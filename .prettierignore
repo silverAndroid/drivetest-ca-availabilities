@@ -2,4 +2,5 @@
 build
 coverage
 *.js
-*.json
+config.json
+tsconfig.json

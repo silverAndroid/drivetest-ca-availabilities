@@ -18,7 +18,7 @@ export async function retryIfFail<T>(
       const value = await fn(...(useAllArgs ? fnArgs : args));
       logger.debug("Called %s successfully", fn.name);
       return value;
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error.message.toLowerCase();
       if (
         errorMessage.includes("browser has disconnected") ||
