@@ -10,22 +10,18 @@ import {
   BookingTimeResponse,
   BookingDateError,
 } from "./api/interfaces";
-import { Result } from "./utils/enums";
 import { logger } from "./logger";
 import { optionsQuery } from "../store/options";
-import { filter, firstValueFrom, map, merge, Observable, of } from "rxjs";
+import { filter, firstValueFrom } from "rxjs";
 import { FilterOptionsState } from "../store/options/options.store";
-import { responsesQuery, responsesService } from "../store/responses";
+import { responsesQuery } from "../store/responses";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
 } from "../store/responses/responseIds";
-import {
-  availabilitiesQuery,
-  availabilitiesService,
-} from "../store/availabilities";
+import { availabilitiesService } from "../store/availabilities";
 import { promisesConcat } from "./utils/promise";
 
 export async function waitToEnterBookingPage(page: Page) {
@@ -75,18 +71,7 @@ export async function login(page: Page) {
   const SUBMIT_BTN_SELECTOR = "#regSubmitBtn";
 
   const { email, licenseExpiry, licenseNumber } = await firstValueFrom(
-    optionsQuery.loginDetails$.pipe(
-      filter(
-        (
-          loginDetails,
-        ): loginDetails is FilterOptionsState<
-          "email" | "licenseExpiry" | "licenseNumber"
-        > => {
-          const { email, licenseExpiry, licenseNumber } = loginDetails;
-          return !!email && !!licenseExpiry && !!licenseNumber;
-        },
-      ),
-    ),
+    optionsQuery.loginDetails$,
   );
 
   await page.waitForSelector(EMAIL_SELECTOR);
@@ -176,20 +161,7 @@ export async function getDriveTestCenters(page: Page) {
     licenseType: selectedLicenseClass,
     location: currentLocation,
     radius: searchRadius,
-  } = await firstValueFrom(
-    optionsQuery.searchParameters$.pipe(
-      filter(
-        (
-          searchParams,
-        ): searchParams is FilterOptionsState<
-          "licenseType" | "radius" | "location"
-        > => {
-          const { licenseType, location, radius } = searchParams;
-          return !!licenseType && !!location && !!radius;
-        },
-      ),
-    ),
-  );
+  } = await firstValueFrom(optionsQuery.searchParameters$);
 
   const response = await responsesQuery.waitForResponse(
     page,
