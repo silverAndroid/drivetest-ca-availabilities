@@ -265,7 +265,6 @@ async function findAvailableDates(
   }
   await clickLocation();
 
-  let availableDates: Date[] = [];
   do {
     let month = 0;
     logger.debug("waiting for response with dates for location");
@@ -338,11 +337,6 @@ async function findAvailableDates(
         for (const availability of availableBookingTimes) {
           availabilitiesService.addNewResult(new Date(availability.timeslot));
         }
-
-        availableDates = [
-          ...availableDates,
-          ...availableBookingTimes.map(({ timeslot }) => new Date(timeslot)),
-        ];
 
         // need to wait 2 seconds for scrolling to finish
         await page.waitForTimeout(2000);
