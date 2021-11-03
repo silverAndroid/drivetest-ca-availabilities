@@ -2,16 +2,16 @@ import { Command } from "commander";
 import os from "os";
 import * as path from "path";
 import { BrowserFetcher } from "puppeteer/lib/cjs/puppeteer/node/BrowserFetcher";
-
-import { main } from "./main";
-import { logger } from "./logger";
 import {
   parseCommanderInt,
   parseLocation,
-  verifyDateFormat,
   verifyLicenseNumber,
-} from "./utils";
-import { ScraperOptions } from "./utils/scraperOptions";
+  verifyDateFormat,
+} from "~utils";
+import { ScraperOptions } from "~utils/scraperOptions";
+
+import { main } from "./main";
+import { logger } from "./logger";
 
 const program = new Command();
 

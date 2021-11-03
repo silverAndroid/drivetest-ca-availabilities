@@ -13,8 +13,8 @@ import {
   takeUntil,
   withLatestFrom,
 } from "rxjs";
+import { Result } from "~utils/enums";
 
-import { Result } from "../../cli/utils/enums";
 import {
   AvailabilitiesStore,
   AvailabilitiesState,

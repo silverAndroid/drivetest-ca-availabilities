@@ -1,7 +1,18 @@
 import { Page, Response } from "puppeteer";
 import { RateLimit } from "async-sema";
+import { firstValueFrom } from "rxjs";
+import { availabilitiesService } from "~store/availabilities";
+import { optionsQuery } from "~store/options";
+import { responsesQuery } from "~store/responses";
+import {
+  ELIGIBILITY_CHECK_ID,
+  LOCATIONS_ID,
+  BOOKING_DATES_ID,
+  BOOKING_TIMES_ID,
+} from "~store/responses/responseIds";
+import { promisesConcat } from "~utils/promise";
 
-import { distanceTo, isInLicenseRange, retryIfFail, Unit } from "./utils";
+import { distanceTo, isInLicenseRange, retryIfFail, Unit } from "../utils";
 import {
   DriveTestCenterLocationsResponse,
   DriveTestCenterLocation,
@@ -11,18 +22,6 @@ import {
   BookingDateError,
 } from "./api/interfaces";
 import { logger } from "./logger";
-import { optionsQuery } from "../store/options";
-import { filter, firstValueFrom } from "rxjs";
-import { FilterOptionsState } from "../store/options/options.store";
-import { responsesQuery } from "../store/responses";
-import {
-  BOOKING_DATES_ID,
-  BOOKING_TIMES_ID,
-  ELIGIBILITY_CHECK_ID,
-  LOCATIONS_ID,
-} from "../store/responses/responseIds";
-import { availabilitiesService } from "../store/availabilities";
-import { promisesConcat } from "./utils/promise";
 
 export async function waitToEnterBookingPage(page: Page) {
   logger.info("Please pass the HCaptcha to continue...");

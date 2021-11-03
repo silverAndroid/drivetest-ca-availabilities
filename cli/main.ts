@@ -3,18 +3,20 @@ import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
-import { merge, map, takeUntil, lastValueFrom, filter } from "rxjs";
 import semver from "semver";
-import { availabilitiesQuery, FoundResult } from "../store/availabilities";
-
-import { optionsQuery, optionsService } from "../store/options";
-import { responsesService } from "../store/responses";
+import { FoundResult, availabilitiesQuery } from "~store/availabilities";
+import { optionsService, optionsQuery } from "~store/options";
+import { responsesService } from "~store/responses";
 import {
+  ELIGIBILITY_CHECK_ID,
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
-  ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
-} from "../store/responses/responseIds";
+} from "~store/responses/responseIds";
+import { Result } from "~utils";
+import { ScraperOptions } from "~utils/scraperOptions";
+import { sleep } from "~utils/sleep";
+
 import { logger } from "./logger";
 import {
   login,
@@ -23,9 +25,6 @@ import {
   waitToEnterBookingPage,
   getDriveTestCenters,
 } from "./scraper";
-import { Result } from "./utils";
-import { ScraperOptions } from "./utils/scraperOptions";
-import { sleep } from "./utils/sleep";
 
 function getCliVersion(): string {
   return process.env.npm_package_version || require("../package.json").version;
