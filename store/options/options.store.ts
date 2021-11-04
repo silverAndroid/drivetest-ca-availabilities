@@ -1,8 +1,8 @@
 import { Store, StoreConfig } from "@datorama/akita";
 
-import { ScraperOptions } from "../../cli/utils/scraperOptions";
+import { ScraperOptions } from "~utils/scraperOptions";
 
-export interface OptionsState extends Partial<ScraperOptions> {}
+export type OptionsState = Partial<ScraperOptions>;
 
 export type FilterOptionsState<T extends keyof ScraperOptions> = Pick<
   ScraperOptions,

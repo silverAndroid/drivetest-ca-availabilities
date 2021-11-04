@@ -1,4 +1,5 @@
-import { ScraperOptions } from "../../cli/utils/scraperOptions";
+import { ScraperOptions } from "~utils/scraperOptions";
+
 import { OptionsStore, optionsStore } from "./options.store";
 
 export class OptionsService {

@@ -14,7 +14,8 @@ import {
   withLatestFrom,
 } from "rxjs";
 
-import { Result } from "../../cli/utils/enums";
+import { Result } from "~utils/enums";
+
 import {
   AvailabilitiesStore,
   AvailabilitiesState,

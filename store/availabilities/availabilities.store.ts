@@ -4,6 +4,7 @@ import {
   EntityStore,
   StoreConfig,
 } from "@datorama/akita";
+
 import { Availability } from "./availability.model";
 
 export interface AvailabilitiesState

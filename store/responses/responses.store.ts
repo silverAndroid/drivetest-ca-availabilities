@@ -1,5 +1,6 @@
 import { Store, StoreConfig } from "@datorama/akita";
 import { Response as HTTPResponse } from "puppeteer";
+
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
@@ -13,8 +14,7 @@ export type SavedResponseId =
   | typeof ELIGIBILITY_CHECK_ID
   | typeof LOCATIONS_ID;
 
-export interface ResponsesState
-  extends Partial<Record<SavedResponseId, HTTPResponse>> {}
+export type ResponsesState = Partial<Record<SavedResponseId, HTTPResponse>>;
 
 export function createInitialState(): ResponsesState {
   return {};

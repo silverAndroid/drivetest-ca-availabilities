@@ -1,18 +1,49 @@
-import { Command } from "commander";
-import { readFile } from "fs";
+import { readFile, readFileSync } from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
 
-import { main } from "./main";
-import { logger } from "./logger";
+import { Command } from "commander";
+import moduleAlias from "module-alias";
+
+const {
+  compilerOptions: { paths },
+} = JSON.parse(
+  readFileSync(path.join(process.cwd(), "tsconfig.json")).toString(),
+);
+
+const fullPaths = Object.keys(paths).filter((path) => !path.endsWith("/*"));
+moduleAlias.addAliases(
+  fullPaths.reduce<Record<string, string>>((pathsObj, key) => {
+    pathsObj[key] = path.join(
+      __dirname,
+      "../",
+      paths[key][0].replace(".ts", ".js"),
+    );
+    return pathsObj;
+  }, {}),
+);
+
+const wildcardPaths = Object.keys(paths).filter((path) => path.endsWith("/*"));
+for (const wildcardPath of wildcardPaths) {
+  (moduleAlias as any).addAlias(
+    wildcardPath.split("/").slice(0, -1).join("/"),
+    (_fromPath: string, _request: string, alias: string) =>
+      path.join(__dirname, "../", alias.replace("~", "")),
+  );
+}
+
 import {
   parseCommanderInt,
   parseLocation,
-  verifyDateFormat,
   verifyLicenseNumber,
-} from "./utils";
-import { ScraperOptions } from "./utils/scraperOptions";
+  verifyDateFormat,
+} from "~utils";
+
+import { ScraperOptions } from "~utils/scraperOptions";
+
+import { logger } from "./logger";
+import { main } from "./main";
 
 const readFileAsync = promisify(readFile);
 
