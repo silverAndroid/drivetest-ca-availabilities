@@ -1,4 +1,5 @@
-import { LicenseClass } from "../cli/api/interfaces";
+import { LicenseClass } from "~cli/api/interfaces";
+
 import { Coordinates } from "./distanceTo";
 
 export interface ScraperOptions {

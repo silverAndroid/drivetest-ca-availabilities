@@ -1,6 +1,6 @@
 import { Page } from "puppeteer";
 
-import { logger } from "../cli/logger";
+import { logger } from "~cli/logger";
 
 /**
  *
