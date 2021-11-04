@@ -1,6 +1,7 @@
-import { Page, Response } from "puppeteer";
 import { RateLimit } from "async-sema";
+import { Page, Response } from "puppeteer";
 import { firstValueFrom } from "rxjs";
+
 import { availabilitiesService } from "~store/availabilities";
 import { optionsQuery } from "~store/options";
 import { responsesQuery } from "~store/responses";

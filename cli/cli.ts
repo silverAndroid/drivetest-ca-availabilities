@@ -1,9 +1,10 @@
-import { Command } from "commander";
-import moduleAlias from "module-alias";
 import { readFile, readFileSync } from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
+
+import { Command } from "commander";
+import moduleAlias from "module-alias";
 
 const {
   compilerOptions: { paths },
@@ -38,10 +39,11 @@ import {
   verifyLicenseNumber,
   verifyDateFormat,
 } from "~utils";
+
 import { ScraperOptions } from "~utils/scraperOptions";
 
-import { main } from "./main";
 import { logger } from "./logger";
+import { main } from "./main";
 
 const readFileAsync = promisify(readFile);
 

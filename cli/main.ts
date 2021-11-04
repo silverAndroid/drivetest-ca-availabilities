@@ -4,6 +4,9 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
+
+import { Result } from "~utils";
+
 import { FoundResult, availabilitiesQuery } from "~store/availabilities";
 import { optionsService, optionsQuery } from "~store/options";
 import { responsesService } from "~store/responses";
@@ -13,7 +16,6 @@ import {
   BOOKING_TIMES_ID,
   LOCATIONS_ID,
 } from "~store/responses/responseIds";
-import { Result } from "~utils";
 import { ScraperOptions } from "~utils/scraperOptions";
 import { sleep } from "~utils/sleep";
 
@@ -27,6 +29,7 @@ import {
 } from "./scraper";
 
 function getCliVersion(): string {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   return process.env.npm_package_version || require("../package.json").version;
 }
 

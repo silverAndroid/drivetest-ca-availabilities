@@ -1,5 +1,6 @@
 import { Query } from "@datorama/akita";
 import { filter } from "rxjs";
+
 import {
   OptionsStore,
   OptionsState,

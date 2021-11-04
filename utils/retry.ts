@@ -1,4 +1,5 @@
 import { Page } from "puppeteer";
+
 import { logger } from "../cli/logger";
 
 /**

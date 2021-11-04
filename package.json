@@ -24,6 +24,11 @@
     "@types/puppeteer": "^5.4.4",
     "@types/semver": "^7.3.5",
     "@types/tough-cookie": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.3.0",
+    "@typescript-eslint/parser": "^5.3.0",
+    "eslint": "^8.1.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.2",
     "husky": "^7.0.1",
     "lint-staged": "^11.1.2",
     "pkg": "^5.1.0",
@@ -50,7 +55,8 @@
     "tslib": "^2.3.1"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*": "prettier --write --ignore-unknown",
+    "*.ts": "eslint . --ext .ts"
   },
   "akitaCli": {
     "basePath": "./store",

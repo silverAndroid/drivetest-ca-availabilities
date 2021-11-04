@@ -1,4 +1,5 @@
 import { ID } from "@datorama/akita";
+
 import { Result } from "~utils/enums";
 
 export interface AvailabilityError {

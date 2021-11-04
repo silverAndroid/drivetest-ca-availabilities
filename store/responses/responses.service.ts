@@ -1,9 +1,6 @@
 import { Logger } from "pino";
-import {
-  Page,
-  Request as HTTPRequest,
-  Response as HTTPResponse,
-} from "puppeteer";
+import { Page, Request as HTTPRequest } from "puppeteer";
+
 import {
   ResponsesStore,
   responsesStore,
@@ -24,7 +21,9 @@ export class ResponsesService {
         if (savedId) {
           logger?.debug("waiting for response %s %s", savedId, req.url());
           this.responsesStore.update({
+            // eslint-disable-next-line no-async-promise-executor
             [savedId]: new Promise(async (resolve) => {
+              // eslint-disable-next-line no-constant-condition
               while (true) {
                 const res = req.response();
                 if (res) {

@@ -1,15 +1,15 @@
 import { filterNilValue, Query } from "@datorama/akita";
 import { Logger } from "pino";
 import { Page, Response as HTTPResponse } from "puppeteer";
-import { catchError, firstValueFrom, from, race, tap, timeout } from "rxjs";
+import { catchError, firstValueFrom, from, race, timeout } from "rxjs";
 
-import { ResponsesService, responsesService } from "./responses.service";
 import {
   BOOKING_DATES_ID,
   BOOKING_TIMES_ID,
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
 } from "./responseIds";
+import { ResponsesService, responsesService } from "./responses.service";
 import {
   ResponsesStore,
   ResponsesState,
