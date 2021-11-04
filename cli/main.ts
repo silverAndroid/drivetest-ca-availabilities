@@ -1,3 +1,5 @@
+import path from "path";
+
 import dayjs from "dayjs";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
@@ -29,8 +31,11 @@ import {
 } from "./scraper";
 
 function getCliVersion(): string {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return process.env.npm_package_version || require("../package.json").version;
+  return (
+    process.env.npm_package_version ||
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require(path.join(process.cwd(), "./package.json")).version
+  );
 }
 
 async function checkCliUpdate() {

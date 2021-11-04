@@ -1,8 +1,9 @@
 {
   "pkg": {
     "assets": [
-      "./evaluate.js",
-      "node_modules/puppeteer-extra-plugin-stealth/**/*.*"
+      "./dist/cli/evaluate.js",
+      "node_modules/puppeteer-extra-plugin-stealth/**/*.*",
+      "./package.json"
     ]
   }
 }

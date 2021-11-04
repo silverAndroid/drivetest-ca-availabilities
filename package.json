@@ -12,12 +12,11 @@
     "build": "tsc",
     "package": "pkg -c ./pkg.config.json -o drivetest-availabilities ./dist/cli/cliPkg.js",
     "package:dev": "yarn build && yarn package",
-    "prepare": "husky install"
+    "prepare": "husky install && ts-patch install -s"
   },
   "devDependencies": {
     "@datorama/akita-cli": "^6.1.1",
     "@types/inquirer": "^7.3.3",
-    "@types/module-alias": "^2.0.1",
     "@types/node-fetch": "^2.5.8",
     "@types/pino": "^6.3.8",
     "@types/pino-multi-stream": "^5.1.1",
@@ -33,7 +32,9 @@
     "lint-staged": "^11.1.2",
     "pkg": "^5.1.0",
     "prettier": "2.3.2",
-    "typescript": "^4.4.4"
+    "ts-patch": "^2.0.1",
+    "typescript": "^4.4.4",
+    "typescript-transform-paths": "^3.3.1"
   },
   "dependencies": {
     "@datorama/akita": "^6.2.4",
@@ -41,7 +42,6 @@
     "commander": "^7.2.0",
     "dayjs": "^1.10.4",
     "inquirer": "^8.1.2",
-    "module-alias": "^2.2.2",
     "node-fetch": "^2.6.1",
     "pino": "^6.11.3",
     "pino-multi-stream": "^5.3.0",
