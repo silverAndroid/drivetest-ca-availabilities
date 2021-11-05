@@ -2,9 +2,9 @@ import path from "path";
 
 import dayjs from "dayjs";
 import fetch from "node-fetch";
+import { Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import puppeteerType from "puppeteer-extra/dist/puppeteer";
 import semver from "semver";
 
 import { Result } from "~utils";
@@ -87,7 +87,7 @@ export async function main(options: ScraperOptions) {
   const { licenseType, enableContinuousSearching } = options;
   optionsService.setOptions(options);
 
-  let browser: puppeteerType.Browser | undefined;
+  let browser: Browser | undefined;
   let shouldCloseBrowserWhenDone = true;
   try {
     puppeteer.use(StealthPlugin());

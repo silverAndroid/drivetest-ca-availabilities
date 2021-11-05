@@ -1,12 +1,12 @@
 import { RateLimit } from "async-sema";
-import { Page, Response } from "puppeteer";
+import { Page, HTTPResponse } from "puppeteer";
 import { firstValueFrom } from "rxjs";
 
 import { retryIfFail, distanceTo, Unit, isInLicenseRange } from "~utils";
 
 import { availabilitiesService } from "~store/availabilities";
 import { optionsQuery } from "~store/options";
-import { responsesQuery } from "~store/responses";
+import { responsesQuery, responsesService } from "~store/responses";
 import {
   ELIGIBILITY_CHECK_ID,
   LOCATIONS_ID,
@@ -270,7 +270,7 @@ async function findAvailableDates(
     let month = 0;
     logger.debug("waiting for response with dates for location");
 
-    let bookingDateResponse: Response;
+    let bookingDateResponse: HTTPResponse;
     try {
       bookingDateResponse = await responsesQuery.waitForResponse(
         page,
@@ -310,6 +310,7 @@ async function findAvailableDates(
       });
     }
 
+    console.log(availableBookingDates);
     for (const { description, day } of availableBookingDates) {
       if (description === Description.Open) {
         const DATE_SELECTOR = `a[title="${day}"]`;
@@ -345,6 +346,7 @@ async function findAvailableDates(
     }
 
     if (numMonths > 0) {
+      responsesService.resetResponse(BOOKING_DATES_ID);
       retryIfFail(
         async function clickNext(nextBtnSelector: string) {
           await rateLimiter();

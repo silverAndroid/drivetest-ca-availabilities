@@ -1,6 +1,6 @@
 import { filterNilValue, Query } from "@datorama/akita";
 import { Logger } from "pino";
-import { Page, Response as HTTPResponse } from "puppeteer";
+import { Page, HTTPResponse } from "puppeteer";
 import { catchError, firstValueFrom, from, race, timeout } from "rxjs";
 
 import {

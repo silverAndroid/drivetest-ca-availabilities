@@ -1,5 +1,5 @@
 import { Logger } from "pino";
-import { Page, Request as HTTPRequest } from "puppeteer";
+import { Page, HTTPRequest } from "puppeteer";
 
 import {
   ResponsesStore,

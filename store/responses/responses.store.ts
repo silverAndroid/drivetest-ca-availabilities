@@ -1,5 +1,5 @@
 import { Store, StoreConfig } from "@datorama/akita";
-import { Response as HTTPResponse } from "puppeteer";
+import { HTTPResponse } from "puppeteer";
 
 import {
   BOOKING_DATES_ID,
