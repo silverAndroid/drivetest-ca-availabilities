@@ -1,5 +1,7 @@
 # drivetest.ca availabilities
 
+## This is no longer being maintained
+
 This CLI tool written in Node.js will log in to [Ontario's driving test booking system](https://drivetest.ca), search for all the available dates and times for all locations within a given search radius (default is 20km). Once it finds some available times, it will write them to the terminal.
 
 I worked on this tool during some of my spare time because I found it difficult to find open spots for driving tests due to the way the website was designed. It uses [Puppeteer](https://github.com/puppeteer/puppeteer) to walk through the website and extract information as if it was a regular user (with some rate-limiting as to not overload the website with requests).
